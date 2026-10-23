@@ -49,84 +49,84 @@ _RAW_CATALOGUE: List[Dict[str, Any]] = [
     # ---------------------------------------------------------- normality
     {
         "key": "shapiro_wilk",
-        "name_zh": "Shapiro-Wilk 正态性检验",
+        "name_zh": "Shapiro-Wilk normality test",
         "name_en": "Shapiro-Wilk normality test",
-        "family_zh": "正态性",
+        "family_zh": "Normality",
         "family_en": "Normality",
-        "h0_zh": "样本来自正态分布",
+        "h0_zh": "the sample is drawn from a normal distribution",
         "h0_en": "the sample is drawn from a normal distribution",
         "stat_name": "W",
         "formula": "W = (Σ a_i x_(i))² / Σ (x_i − x̄)²",
-        "assume_zh": "观测独立同分布；样本量建议 3–5000（更大样本改用 D'Agostino K²）",
+        "assume_zh": "i.i.d. observations; n between 3 and 5,000 (use D'Agostino K² above that)",
         "assume_en": "i.i.d. observations; n between 3 and 5,000 (use D'Agostino K² above that)",
-        "use_zh": "小样本下判断 t / F / ANOVA 的正态前提是否成立",
+        "use_zh": "deciding whether t / F / ANOVA assumptions hold on small samples",
         "use_en": "deciding whether t / F / ANOVA assumptions hold on small samples",
-        "reject_zh": "显著偏离正态：改用秩检验（Mann-Whitney / Wilcoxon）或先做变换",
+        "reject_zh": "significant departure from normality: switch to a rank test or transform the data",
         "reject_en": "significant departure from normality: switch to a rank test or transform the data",
-        "retain_zh": "未发现偏离正态的证据，正态理论检验可用",
+        "retain_zh": "no evidence against normality; normal-theory tests are admissible",
         "retain_en": "no evidence against normality; normal-theory tests are admissible",
         "ref": "Shapiro, S. S. & Wilk, M. B. (1965). An analysis of variance test for normality. Biometrika 52(3/4), 591-611.",
         "short_ref": "Shapiro & Wilk (1965)",
     },
     {
         "key": "dagostino_k2",
-        "name_zh": "D'Agostino-Pearson K² 正态性检验",
+        "name_zh": "D'Agostino-Pearson K² normality test",
         "name_en": "D'Agostino-Pearson K² normality test",
-        "family_zh": "正态性",
+        "family_zh": "Normality",
         "family_en": "Normality",
-        "h0_zh": "样本来自正态分布（偏度=0 且峰度=3）",
+        "h0_zh": "the sample is normal (skewness 0 and kurtosis 3)",
         "h0_en": "the sample is normal (skewness 0 and kurtosis 3)",
         "stat_name": "K²",
         "formula": "K² = Z_skew² + Z_kurt² ~ χ²(2)",
-        "assume_zh": "观测独立；样本量建议 ≥ 20",
+        "assume_zh": "independent observations; n ≥ 20",
         "assume_en": "independent observations; n ≥ 20",
-        "use_zh": "大样本（>5000）下的正态性检验，Shapiro-Wilk 的替代",
+        "use_zh": "normality testing on large samples (>5,000), where Shapiro-Wilk is unreliable",
         "use_en": "normality testing on large samples (>5,000), where Shapiro-Wilk is unreliable",
-        "reject_zh": "偏度或峰度显著异常：大样本下即便轻微偏离也会显著，应结合 QQ 图判断",
+        "reject_zh": "skewness or kurtosis is off: at large n even trivial departures reject — read it with a QQ plot",
         "reject_en": "skewness or kurtosis is off: at large n even trivial departures reject — read it with a QQ plot",
-        "retain_zh": "未发现偏度/峰度异常，正态近似可用",
+        "retain_zh": "no skewness or kurtosis anomaly; the normal approximation holds",
         "retain_en": "no skewness or kurtosis anomaly; the normal approximation holds",
         "ref": "D'Agostino, R. B., Belanger, A. & D'Agostino, R. B. (1990). A suggestion for using powerful and informative tests of normality. The American Statistician 44(4), 316-321.",
         "short_ref": "D'Agostino et al. (1990)",
     },
     {
         "key": "jarque_bera",
-        "name_zh": "Jarque-Bera 正态性检验",
+        "name_zh": "Jarque-Bera normality test",
         "name_en": "Jarque-Bera normality test",
-        "family_zh": "正态性",
+        "family_zh": "Normality",
         "family_en": "Normality",
-        "h0_zh": "样本来自正态分布",
+        "h0_zh": "the sample is drawn from a normal distribution",
         "h0_en": "the sample is drawn from a normal distribution",
         "stat_name": "JB",
         "formula": "JB = n/6 · (S² + (K − 3)²/4) ~ χ²(2)",
-        "assume_zh": "观测独立；对尾部厚度敏感",
+        "assume_zh": "independent observations; sensitive to tail thickness",
         "assume_en": "independent observations; sensitive to tail thickness",
-        "use_zh": "回归残差、大样本指标的快速正态性体检",
+        "use_zh": "quick normality check on regression residuals and large samples",
         "use_en": "quick normality check on regression residuals and large samples",
-        "reject_zh": "残差非正态：区间估计与 t 检验在大样本下仍近似有效，但预测区间需谨慎",
+        "reject_zh": "non-normal residuals: t tests stay approximately valid at large n, but prediction intervals need care",
         "reject_en": "non-normal residuals: t tests stay approximately valid at large n, but prediction intervals need care",
-        "retain_zh": "残差与正态相容",
+        "retain_zh": "residuals are compatible with normality",
         "retain_en": "residuals are compatible with normality",
         "ref": "Jarque, C. M. & Bera, A. K. (1980). Efficient tests for normality, homoscedasticity and serial independence of regression residuals. Economics Letters 6(3), 255-259.",
         "short_ref": "Jarque & Bera (1980)",
     },
     {
         "key": "anderson_darling",
-        "name_zh": "Anderson-Darling 正态性检验",
+        "name_zh": "Anderson-Darling normality test",
         "name_en": "Anderson-Darling normality test",
-        "family_zh": "正态性",
+        "family_zh": "Normality",
         "family_en": "Normality",
-        "h0_zh": "样本来自正态分布",
+        "h0_zh": "the sample is drawn from a normal distribution",
         "h0_en": "the sample is drawn from a normal distribution",
         "stat_name": "A²",
         "formula": "A² = −n − (1/n) Σ (2i−1)[ln F(x_(i)) + ln(1 − F(x_(n+1−i)))]",
-        "assume_zh": "观测独立；对尾部偏离最敏感",
+        "assume_zh": "independent observations; most sensitive in the tails",
         "assume_en": "independent observations; most sensitive in the tails",
-        "use_zh": "关心尾部（极端值、风控、金额）时替代 Shapiro-Wilk",
+        "use_zh": "tail-sensitive normality checks (risk, revenue outliers) instead of Shapiro-Wilk",
         "use_en": "tail-sensitive normality checks (risk, revenue outliers) instead of Shapiro-Wilk",
-        "reject_zh": "尾部偏离正态：极端值推断不可依赖正态假设",
+        "reject_zh": "tails depart from normality: do not rely on normal-theory tail inference",
         "reject_en": "tails depart from normality: do not rely on normal-theory tail inference",
-        "retain_zh": "尾部与正态相容",
+        "retain_zh": "tails are compatible with normality",
         "retain_en": "tails are compatible with normality",
         "ref": "Anderson, T. W. & Darling, D. A. (1954). A test of goodness of fit. JASA 49(268), 765-769.",
         "short_ref": "Anderson & Darling (1954)",
@@ -134,42 +134,42 @@ _RAW_CATALOGUE: List[Dict[str, Any]] = [
     # ---------------------------------------------------------- variance
     {
         "key": "levene",
-        "name_zh": "Levene / Brown-Forsythe 方差齐性检验",
+        "name_zh": "Levene / Brown-Forsythe equal-variance test",
         "name_en": "Levene / Brown-Forsythe equal-variance test",
-        "family_zh": "方差",
+        "family_zh": "Variance",
         "family_en": "Variance",
-        "h0_zh": "各组方差相等",
+        "h0_zh": "the groups share a common variance",
         "h0_en": "the groups share a common variance",
         "stat_name": "W",
         "formula": "W = [(N−k)/(k−1)] · Σ n_i (Z̄_i − Z̄)² / Σ Σ (Z_ij − Z̄_i)²,  Z = |x − median_i|",
-        "assume_zh": "观测独立；中位数中心化后对非正态稳健",
+        "assume_zh": "independent observations; median-centring makes it robust to non-normality",
         "assume_en": "independent observations; median-centring makes it robust to non-normality",
-        "use_zh": "选择 Welch t（不齐）还是 Student t（齐），以及 ANOVA 的前提检查",
+        "use_zh": "choosing Welch vs Student t, and as an ANOVA prerequisite",
         "use_en": "choosing Welch vs Student t, and as an ANOVA prerequisite",
-        "reject_zh": "方差不齐：用 Welch t / 稳健标准误，不要用合并方差的 Student t",
+        "reject_zh": "unequal variances: use Welch t or robust SEs, not pooled-variance Student t",
         "reject_en": "unequal variances: use Welch t or robust SEs, not pooled-variance Student t",
-        "retain_zh": "方差可比：合并方差与 t 检验的前提成立",
+        "retain_zh": "variances are comparable: pooled-variance tests are admissible",
         "retain_en": "variances are comparable: pooled-variance tests are admissible",
         "ref": "Brown, M. B. & Forsythe, A. B. (1974). Robust tests for the equality of variances. JASA 69(346), 364-367.",
         "short_ref": "Brown & Forsythe (1974)",
     },
     {
         "key": "bartlett",
-        "name_zh": "Bartlett 方差齐性检验",
+        "name_zh": "Bartlett equal-variance test",
         "name_en": "Bartlett equal-variance test",
-        "family_zh": "方差",
+        "family_zh": "Variance",
         "family_en": "Variance",
-        "h0_zh": "各组方差相等（数据正态）",
+        "h0_zh": "the groups share a common variance (normal data)",
         "h0_en": "the groups share a common variance (normal data)",
         "stat_name": "χ²",
         "formula": "χ² = [(N−k) ln s_p² − Σ (n_i−1) ln s_i²] / C,  C = 1 + (Σ 1/(n_i−1) − 1/(N−k))/(3(k−1))",
-        "assume_zh": "各组正态；对非正态极敏感",
+        "assume_zh": "normality within groups; very sensitive to departures",
         "assume_en": "normality within groups; very sensitive to departures",
-        "use_zh": "正态数据下方差齐性的最强检验（功效高于 Levene）",
+        "use_zh": "the most powerful equal-variance test when the data really are normal",
         "use_en": "the most powerful equal-variance test when the data really are normal",
-        "reject_zh": "方差不齐（或数据非正态导致误拒）：以 Levene 结果为准",
+        "reject_zh": "variances differ (or non-normality drove the rejection): trust Levene instead",
         "reject_en": "variances differ (or non-normality drove the rejection): trust Levene instead",
-        "retain_zh": "方差齐性成立",
+        "retain_zh": "equal variances are not rejected",
         "retain_en": "equal variances are not rejected",
         "ref": "Bartlett, M. S. (1937). Properties of sufficiency and statistical tests. Proceedings of the Royal Society A 160(901), 268-282.",
         "short_ref": "Bartlett (1937)",
@@ -177,147 +177,147 @@ _RAW_CATALOGUE: List[Dict[str, Any]] = [
     # ---------------------------------------------------------- location
     {
         "key": "student_t",
-        "name_zh": "Student t 检验（合并方差）",
+        "name_zh": "Student t-test (pooled variance)",
         "name_en": "Student t-test (pooled variance)",
-        "family_zh": "位置",
+        "family_zh": "Location",
         "family_en": "Location",
-        "h0_zh": "两组均值相等，且两组方差相等",
+        "h0_zh": "equal means, assuming equal variances",
         "h0_en": "equal means, assuming equal variances",
         "stat_name": "t",
         "formula": "t = (ȳ₂ − ȳ₁) / (s_p √(1/n₁ + 1/n₂)),  df = n₁ + n₂ − 2",
-        "assume_zh": "独立样本、近似正态、方差齐性",
+        "assume_zh": "independent samples, approximate normality, equal variances",
         "assume_en": "independent samples, approximate normality, equal variances",
-        "use_zh": "方差齐且样本量接近时的经典两样本检验",
+        "use_zh": "the classic two-sample test when variances and sizes are comparable",
         "use_en": "the classic two-sample test when variances and sizes are comparable",
-        "reject_zh": "两组均值差异显著",
+        "reject_zh": "the group means differ significantly",
         "reject_en": "the group means differ significantly",
-        "retain_zh": "未发现均值差异",
+        "retain_zh": "no mean difference detected",
         "retain_en": "no mean difference detected",
         "ref": "Student (Gosset, W. S.) (1908). The probable error of a mean. Biometrika 6(1), 1-25.",
         "short_ref": "Student (1908)",
     },
     {
         "key": "welch_t",
-        "name_zh": "Welch t 检验（不等方差）",
+        "name_zh": "Welch t-test (unequal variances)",
         "name_en": "Welch t-test (unequal variances)",
-        "family_zh": "位置",
+        "family_zh": "Location",
         "family_en": "Location",
-        "h0_zh": "两组均值相等",
+        "h0_zh": "the two group means are equal",
         "h0_en": "the two group means are equal",
         "stat_name": "t",
         "formula": "t = (ȳ₂ − ȳ₁) / √(s₁²/n₁ + s₂²/n₂),  df ≈ Welch-Satterthwaite",
-        "assume_zh": "独立样本、近似正态；不要求方差齐性",
+        "assume_zh": "independent samples, approximate normality; equal variances NOT required",
         "assume_en": "independent samples, approximate normality; equal variances NOT required",
-        "use_zh": "实验读数的连续指标默认检验（样本量或方差不齐时也成立）",
+        "use_zh": "the default readout test for continuous experiment metrics",
         "use_en": "the default readout test for continuous experiment metrics",
-        "reject_zh": "两组均值差异显著（方向见均值差）",
+        "reject_zh": "the group means differ significantly (sign follows the mean difference)",
         "reject_en": "the group means differ significantly (sign follows the mean difference)",
-        "retain_zh": "未发现显著均值差异",
+        "retain_zh": "no significant mean difference",
         "retain_en": "no significant mean difference",
         "ref": "Welch, B. L. (1947). The generalization of Student's problem when several different population variances are involved. Biometrika 34(1/2), 28-35.",
         "short_ref": "Welch (1947)",
     },
     {
         "key": "paired_t",
-        "name_zh": "配对样本 t 检验",
+        "name_zh": "Paired t-test",
         "name_en": "Paired t-test",
-        "family_zh": "位置",
+        "family_zh": "Location",
         "family_en": "Location",
-        "h0_zh": "配对差值均值为 0",
+        "h0_zh": "the mean of the paired differences is zero",
         "h0_en": "the mean of the paired differences is zero",
         "stat_name": "t",
         "formula": "t = d̄ / (s_d/√n),  df = n − 1",
-        "assume_zh": "配对观测、差值近似正态",
+        "assume_zh": "paired observations; differences approximately normal",
         "assume_en": "paired observations; differences approximately normal",
-        "use_zh": "同一批日期/用户在两个窗口的对比（实际 vs 预期、前后测）",
+        "use_zh": "same units observed twice (actual vs expected, before vs after)",
         "use_en": "same units observed twice (actual vs expected, before vs after)",
-        "reject_zh": "配对差值显著非零：窗口间存在系统性偏移",
+        "reject_zh": "the paired difference is systematically non-zero",
         "reject_en": "the paired difference is systematically non-zero",
-        "retain_zh": "配对差值不显著：无系统性偏移",
+        "retain_zh": "no systematic shift between the paired windows",
         "retain_en": "no systematic shift between the paired windows",
         "ref": "Student (1908), §IX; see also Snedecor & Cochran (1989), Statistical Methods, 8th ed., Ch. 4.",
         "short_ref": "Student (1908)",
     },
     {
         "key": "wilcoxon",
-        "name_zh": "Wilcoxon 符号秩检验",
+        "name_zh": "Wilcoxon signed-rank test",
         "name_en": "Wilcoxon signed-rank test",
-        "family_zh": "位置",
+        "family_zh": "Location",
         "family_en": "Location",
-        "h0_zh": "配对差值的中位数为 0",
+        "h0_zh": "the median paired difference is zero",
         "h0_en": "the median paired difference is zero",
         "stat_name": "W+",
-        "formula": "W+ = Σ_{d_i>0} rank(|d_i|)，在 H0 下 E[W+]=n(n+1)/4",
-        "assume_zh": "配对观测；差值分布对称（不要求正态）",
+        "formula": "W+ = Σ_{d_i>0} rank(|d_i|), under H0 E[W+]=n(n+1)/4",
+        "assume_zh": "paired observations; symmetric differences (normality NOT required)",
         "assume_en": "paired observations; symmetric differences (normality NOT required)",
-        "use_zh": "配对 t 检验的稳健替代，异常值或小样本时使用",
+        "use_zh": "robust alternative to the paired t-test with outliers or small n",
         "use_en": "robust alternative to the paired t-test with outliers or small n",
-        "reject_zh": "配对差值的中位数显著非零",
+        "reject_zh": "the median paired difference is non-zero",
         "reject_en": "the median paired difference is non-zero",
-        "retain_zh": "未发现中位数偏移",
+        "retain_zh": "no median shift detected",
         "retain_en": "no median shift detected",
         "ref": "Wilcoxon, F. (1945). Individual comparisons by ranking methods. Biometrics Bulletin 1(6), 80-83.",
         "short_ref": "Wilcoxon (1945)",
     },
     {
         "key": "mann_whitney",
-        "name_zh": "Mann-Whitney U 检验",
+        "name_zh": "Mann-Whitney U test",
         "name_en": "Mann-Whitney U test",
-        "family_zh": "位置",
+        "family_zh": "Location",
         "family_en": "Location",
-        "h0_zh": "两组来自同一分布（随机抽取一个观测，两组的概率相等）",
+        "h0_zh": "the two samples come from the same distribution",
         "h0_en": "the two samples come from the same distribution",
         "stat_name": "U",
-        "formula": "U = R₁ − n₁(n₁+1)/2，标准化后 ~ N(0,1)",
-        "assume_zh": "独立样本；不要求正态，但要求分布形状相近才能解释为位置差异",
+        "formula": "U = R₁ − n₁(n₁+1)/2, standardised ~ N(0,1)",
+        "assume_zh": "independent samples; no normality, but similar shapes for a pure location reading",
         "assume_en": "independent samples; no normality, but similar shapes for a pure location reading",
-        "use_zh": "重尾金额、评分分布等非正态指标的组间比较",
+        "use_zh": "heavy-tailed or ordinal metrics where t tests are fragile",
         "use_en": "heavy-tailed or ordinal metrics where t tests are fragile",
-        "reject_zh": "两组分布位置存在显著差异",
+        "reject_zh": "the two distributions are shifted relative to each other",
         "reject_en": "the two distributions are shifted relative to each other",
-        "retain_zh": "未发现分布位置差异",
+        "retain_zh": "no location shift detected",
         "retain_en": "no location shift detected",
         "ref": "Mann, H. B. & Whitney, D. R. (1947). On a test of whether one of two random variables is stochastically larger than the other. Annals of Mathematical Statistics 18(1), 50-60.",
         "short_ref": "Mann & Whitney (1947)",
     },
     {
         "key": "kruskal_wallis",
-        "name_zh": "Kruskal-Wallis H 检验",
+        "name_zh": "Kruskal-Wallis H test",
         "name_en": "Kruskal-Wallis H test",
-        "family_zh": "位置",
+        "family_zh": "Location",
         "family_en": "Location",
-        "h0_zh": "多组来自同一分布",
+        "h0_zh": "all groups come from the same distribution",
         "h0_en": "all groups come from the same distribution",
         "stat_name": "H",
         "formula": "H = 12/(N(N+1)) · Σ n_i R̄_i² − 3(N+1) ~ χ²(k−1)",
-        "assume_zh": "独立样本；各组分布形状相近",
+        "assume_zh": "independent samples; similar distribution shapes",
         "assume_en": "independent samples; similar distribution shapes",
-        "use_zh": "多组比较（A/B/n、多分群）的非参数版本",
+        "use_zh": "non-parametric multi-group comparison (A/B/n, many segments)",
         "use_en": "non-parametric multi-group comparison (A/B/n, many segments)",
-        "reject_zh": "至少一组的位置不同（需事后两两比较定位）",
+        "reject_zh": "at least one group differs (pairwise post-hoc needed to locate it)",
         "reject_en": "at least one group differs (pairwise post-hoc needed to locate it)",
-        "retain_zh": "多组之间未发现差异",
+        "retain_zh": "no difference across groups",
         "retain_en": "no difference across groups",
         "ref": "Kruskal, W. H. & Wallis, W. A. (1952). Use of ranks in one-criterion variance analysis. JASA 47(260), 583-621.",
         "short_ref": "Kruskal & Wallis (1952)",
     },
     {
         "key": "one_way_anova",
-        "name_zh": "单因素方差分析（F 检验）",
+        "name_zh": "One-way ANOVA (F test)",
         "name_en": "One-way ANOVA (F test)",
-        "family_zh": "位置",
+        "family_zh": "Location",
         "family_en": "Location",
-        "h0_zh": "各组均值相等",
+        "h0_zh": "all group means are equal",
         "h0_en": "all group means are equal",
         "stat_name": "F",
         "formula": "F = MSB/MSW = [Σ n_i (ȳ_i − ȳ)²/(k−1)] / [Σ Σ (y_ij − ȳ_i)²/(N−k)]",
-        "assume_zh": "独立、正态、方差齐性",
+        "assume_zh": "independence, normality, equal variances",
         "assume_en": "independence, normality, equal variances",
-        "use_zh": "三组及以上（A/B/n、析因主效应）的整体检验",
+        "use_zh": "omnibus test for three or more arms (A/B/n, factorial main effects)",
         "use_en": "omnibus test for three or more arms (A/B/n, factorial main effects)",
-        "reject_zh": "至少一组均值不同：先做整体检验再做事后两两比较",
+        "reject_zh": "at least one mean differs: follow with pairwise comparisons",
         "reject_en": "at least one mean differs: follow with pairwise comparisons",
-        "retain_zh": "各组均值无显著差异",
+        "retain_zh": "no significant difference among group means",
         "retain_en": "no significant difference among group means",
         "ref": "Fisher, R. A. (1925). Statistical Methods for Research Workers. Oliver & Boyd.",
         "short_ref": "Fisher (1925)",
@@ -325,105 +325,105 @@ _RAW_CATALOGUE: List[Dict[str, Any]] = [
     # ---------------------------------------------------------- proportions
     {
         "key": "two_proportion_z",
-        "name_zh": "两比例 z 检验",
+        "name_zh": "Two-proportion z-test",
         "name_en": "Two-proportion z-test",
-        "family_zh": "比例",
+        "family_zh": "Proportion",
         "family_en": "Proportion",
-        "h0_zh": "两组转化率相等（p₁ = p₂）",
+        "h0_zh": "the two conversion rates are equal",
         "h0_en": "the two conversion rates are equal",
         "stat_name": "z",
-        "formula": "z = (p̂₂ − p̂₁) / √(p̂(1−p̂)(1/n₁ + 1/n₂))，p̂ 为合并比例",
-        "assume_zh": "独立观测；n·p 与 n·(1−p) 均 ≥ 5（稀有事件需精确检验）",
+        "formula": "z = (p̂₂ − p̂₁) / √(p̂(1−p̂)(1/n₁ + 1/n₂)), p̂ is the pooled proportion",
+        "assume_zh": "independent observations; n·p and n·(1−p) ≥ 5 (rare events need an exact test)",
         "assume_en": "independent observations; n·p and n·(1−p) ≥ 5 (rare events need an exact test)",
-        "use_zh": "CVR / CTR / 留存率等 0-1 指标的实验读数",
+        "use_zh": "experiment readouts on 0/1 metrics such as CVR, CTR, retention",
         "use_en": "experiment readouts on 0/1 metrics such as CVR, CTR, retention",
-        "reject_zh": "两组转化率差异显著",
+        "reject_zh": "the conversion rates differ significantly",
         "reject_en": "the conversion rates differ significantly",
-        "retain_zh": "未发现转化率差异",
+        "retain_zh": "no difference in conversion rates",
         "retain_en": "no difference in conversion rates",
         "ref": "Kohavi, R., Tang, D. & Xu, Y. (2020). Trustworthy Online Controlled Experiments, Ch. 3. Cambridge University Press.",
         "short_ref": "Kohavi et al. (2020)",
     },
     {
         "key": "chi_square_gof",
-        "name_zh": "卡方拟合优度检验（SRM）",
+        "name_zh": "Chi-square goodness-of-fit (SRM)",
         "name_en": "Chi-square goodness-of-fit (SRM)",
-        "family_zh": "比例",
+        "family_zh": "Proportion",
         "family_en": "Proportion",
-        "h0_zh": "实际分流比例等于计划比例",
+        "h0_zh": "the realised traffic split equals the planned split",
         "h0_en": "the realised traffic split equals the planned split",
         "stat_name": "χ²",
         "formula": "χ² = Σ (O_i − E_i)² / E_i ~ χ²(k−1)",
-        "assume_zh": "各桶独立分配；每桶期望计数 ≥ 5",
+        "assume_zh": "independent assignment; expected count ≥ 5 per bucket",
         "assume_en": "independent assignment; expected count ≥ 5 per bucket",
-        "use_zh": "读任何实验指标之前的分流健康检查（阈值 0.001）",
+        "use_zh": "traffic-health gate before reading any experiment metric (threshold 0.001)",
         "use_en": "traffic-health gate before reading any experiment metric (threshold 0.001)",
-        "reject_zh": "检出 SRM：分流或日志链路有问题，指标不可信",
+        "reject_zh": "SRM detected: randomisation or logging is broken, metrics are untrustworthy",
         "reject_en": "SRM detected: randomisation or logging is broken, metrics are untrustworthy",
-        "retain_zh": "未检出 SRM，可以读指标",
+        "retain_zh": "no SRM; metrics can be read",
         "retain_en": "no SRM; metrics can be read",
         "ref": "Kohavi, R., Tang, D. & Xu, Y. (2020). Trustworthy Online Controlled Experiments, Ch. 4 (SRM).",
         "short_ref": "Kohavi et al. (2020), Ch. 4",
     },
     {
         "key": "chi_square_independence",
-        "name_zh": "卡方独立性检验",
+        "name_zh": "Chi-square test of independence",
         "name_en": "Chi-square test of independence",
-        "family_zh": "比例",
+        "family_zh": "Proportion",
         "family_en": "Proportion",
-        "h0_zh": "两个分类变量独立（如实验分组与转化无关）",
+        "h0_zh": "the two categorical variables are independent",
         "h0_en": "the two categorical variables are independent",
         "stat_name": "χ²",
         "formula": "χ² = ΣΣ (O_ij − E_ij)² / E_ij,  df = (r−1)(c−1)",
-        "assume_zh": "独立观测；期望频数 ≥ 5（2x2 且偏斜时用 Fisher 精确检验）",
+        "assume_zh": "independent observations; expected counts ≥ 5 (use Fisher for sparse 2x2)",
         "assume_en": "independent observations; expected counts ≥ 5 (use Fisher for sparse 2x2)",
-        "use_zh": "2x2 转化表、父子实验正交性、分组与分群的独立性",
+        "use_zh": "2x2 conversion tables, parent-child orthogonality, arm vs segment independence",
         "use_en": "2x2 conversion tables, parent-child orthogonality, arm vs segment independence",
-        "reject_zh": "两变量不独立：分组与结果（或分群）存在关联",
+        "reject_zh": "the variables are associated: assignment is related to the outcome (or segment)",
         "reject_en": "the variables are associated: assignment is related to the outcome (or segment)",
-        "retain_zh": "未发现关联",
+        "retain_zh": "no association detected",
         "retain_en": "no association detected",
         "ref": "Pearson, K. (1900). On the criterion that a given system of deviations... Philosophical Magazine 50(302), 157-175.",
         "short_ref": "Pearson (1900)",
     },
     {
         "key": "fisher_exact",
-        "name_zh": "Fisher 精确检验",
+        "name_zh": "Fisher's exact test",
         "name_en": "Fisher's exact test",
-        "family_zh": "比例",
+        "family_zh": "Proportion",
         "family_en": "Proportion",
-        "h0_zh": "2x2 表中两组的比例相等（超几何分布下）",
+        "h0_zh": "equal proportions in a 2x2 table (hypergeometric null)",
         "h0_en": "equal proportions in a 2x2 table (hypergeometric null)",
         "stat_name": "p",
         "formula": "p = Σ_{t ≥ t_obs} [C(a+b,t) C(c+d, a+c−t)] / C(n, a+c)",
-        "assume_zh": "独立观测；行列边际固定；无需大样本近似",
+        "assume_zh": "independent observations with fixed margins; no large-sample approximation",
         "assume_en": "independent observations with fixed margins; no large-sample approximation",
-        "use_zh": "小样本或稀有事件（转化数很少）的 2x2 比较",
+        "use_zh": "small samples or rare events where the z approximation fails",
         "use_en": "small samples or rare events where the z approximation fails",
-        "reject_zh": "两组比例差异显著（精确结论）",
+        "reject_zh": "the proportions differ (exact conclusion)",
         "reject_en": "the proportions differ (exact conclusion)",
-        "retain_zh": "未发现比例差异",
+        "retain_zh": "no difference in proportions",
         "retain_en": "no difference in proportions",
         "ref": "Fisher, R. A. (1935). The logic of inductive inference. Journal of the Royal Statistical Society 98(1), 39-82.",
         "short_ref": "Fisher (1935)",
     },
     {
         "key": "mcnemar",
-        "name_zh": "McNemar 配对比例检验",
+        "name_zh": "McNemar's paired proportion test",
         "name_en": "McNemar's paired proportion test",
-        "family_zh": "比例",
+        "family_zh": "Proportion",
         "family_en": "Proportion",
-        "h0_zh": "配对二元结果的边际比例相等（b = c）",
+        "h0_zh": "the marginal proportions are equal for paired binary outcomes",
         "h0_en": "the marginal proportions are equal for paired binary outcomes",
         "stat_name": "χ²",
-        "formula": "χ² = (b − c)² / (b + c) ~ χ²(1)（小样本用精确二项检验）",
-        "assume_zh": "同一单元两次测量；只使用不一致的配对 (b, c)",
+        "formula": "χ² = (b − c)² / (b + c) ~ χ²(1) (exact binomial test on small samples)",
+        "assume_zh": "same units measured twice; only discordant pairs (b, c) are used",
         "assume_en": "same units measured twice; only discordant pairs (b, c) are used",
-        "use_zh": "同一批用户前后对比、反转实验的阶段对比",
+        "use_zh": "before/after on the same users, phase comparison in reversal tests",
         "use_en": "before/after on the same users, phase comparison in reversal tests",
-        "reject_zh": "前后比例显著变化",
+        "reject_zh": "the proportion changed significantly between the paired measurements",
         "reject_en": "the proportion changed significantly between the paired measurements",
-        "retain_zh": "前后比例无显著变化",
+        "retain_zh": "no significant change between paired measurements",
         "retain_en": "no significant change between paired measurements",
         "ref": "McNemar, Q. (1947). Note on the sampling error of the difference between correlated proportions. Psychometrika 12(2), 153-157.",
         "short_ref": "McNemar (1947)",
@@ -431,21 +431,21 @@ _RAW_CATALOGUE: List[Dict[str, Any]] = [
     # ---------------------------------------------------------- distribution
     {
         "key": "ks_two_sample",
-        "name_zh": "Kolmogorov-Smirnov 两样本检验",
+        "name_zh": "Two-sample Kolmogorov-Smirnov test",
         "name_en": "Two-sample Kolmogorov-Smirnov test",
-        "family_zh": "分布",
+        "family_zh": "Distribution",
         "family_en": "Distribution",
-        "h0_zh": "两组来自同一分布（任意形状）",
+        "h0_zh": "the two samples come from the same distribution (any shape)",
         "h0_en": "the two samples come from the same distribution (any shape)",
         "stat_name": "D",
         "formula": "D = sup_x |F₁(x) − F₂(x)|",
-        "assume_zh": "独立样本；连续分布（离散数据偏保守）",
+        "assume_zh": "independent samples; continuous distributions (conservative for discrete data)",
         "assume_en": "independent samples; continuous distributions (conservative for discrete data)",
-        "use_zh": "检查整条分布是否变化（不只看均值），如金额分布、分数分布",
+        "use_zh": "detecting a shift anywhere in the distribution, not just the mean",
         "use_en": "detecting a shift anywhere in the distribution, not just the mean",
-        "reject_zh": "两组分布不同：均值相同也可能分布形状变化，需要看分位数",
+        "reject_zh": "the distributions differ: equal means can hide a shape change — inspect quantiles",
         "reject_en": "the distributions differ: equal means can hide a shape change — inspect quantiles",
-        "retain_zh": "未发现分布差异",
+        "retain_zh": "no distributional difference detected",
         "retain_en": "no distributional difference detected",
         "ref": "Massey, F. J. (1951). The Kolmogorov-Smirnov test for goodness of fit. JASA 46(253), 68-78.",
         "short_ref": "Massey (1951)",
@@ -453,84 +453,84 @@ _RAW_CATALOGUE: List[Dict[str, Any]] = [
     # ---------------------------------------------------------- time series
     {
         "key": "ljung_box",
-        "name_zh": "Ljung-Box 自相关检验",
+        "name_zh": "Ljung-Box autocorrelation test",
         "name_en": "Ljung-Box autocorrelation test",
-        "family_zh": "时序",
+        "family_zh": "Time series",
         "family_en": "Time series",
-        "h0_zh": "残差前 m 阶自相关全为 0（白噪声）",
+        "h0_zh": "the first m residual autocorrelations are zero (white noise)",
         "h0_en": "the first m residual autocorrelations are zero (white noise)",
         "stat_name": "Q",
         "formula": "Q = n(n+2) Σ_{k=1..m} r_k²/(n−k) ~ χ²(m)",
-        "assume_zh": "序列平稳；m 一般取 5–20 或周期长度",
+        "assume_zh": "stationary series; m usually 5-20 or one seasonal cycle",
         "assume_en": "stationary series; m usually 5-20 or one seasonal cycle",
-        "use_zh": "时序模型 / ITS 残差诊断：自相关意味着标准误被低估",
+        "use_zh": "residual diagnostics for TS models and ITS: autocorrelation means underestimated SEs",
         "use_en": "residual diagnostics for TS models and ITS: autocorrelation means underestimated SEs",
-        "reject_zh": "残差存在自相关：p 值与置信区间偏乐观，需 HAC/ARMA 结构",
+        "reject_zh": "residual autocorrelation: p-values and CIs are optimistic — use HAC or an ARMA error term",
         "reject_en": "residual autocorrelation: p-values and CIs are optimistic — use HAC or an ARMA error term",
-        "retain_zh": "残差近似白噪声，标准误可信",
+        "retain_zh": "residuals are close to white noise; SEs are credible",
         "retain_en": "residuals are close to white noise; SEs are credible",
         "ref": "Ljung, G. M. & Box, G. E. P. (1978). On a measure of lack of fit in time series models. Biometrika 65(2), 297-303.",
         "short_ref": "Ljung & Box (1978)",
     },
     {
         "key": "durbin_watson",
-        "name_zh": "Durbin-Watson 自相关统计量",
+        "name_zh": "Durbin-Watson statistic",
         "name_en": "Durbin-Watson statistic",
-        "family_zh": "时序",
+        "family_zh": "Time series",
         "family_en": "Time series",
-        "h0_zh": "残差无一阶自相关（DW = 2）",
+        "h0_zh": "no first-order residual autocorrelation (DW = 2)",
         "h0_en": "no first-order residual autocorrelation (DW = 2)",
         "stat_name": "DW",
         "formula": "DW = Σ (e_t − e_{t−1})² / Σ e_t² ∈ [0, 4]",
-        "assume_zh": "残差含常数项；按时间顺序排列",
+        "assume_zh": "residuals from a model with an intercept, ordered in time",
         "assume_en": "residuals from a model with an intercept, ordered in time",
-        "use_zh": "回归残差的一阶自相关快检（DW<1.5 或 >2.5 需警惕）",
+        "use_zh": "quick first-order autocorrelation check (flag DW < 1.5 or > 2.5)",
         "use_en": "quick first-order autocorrelation check (flag DW < 1.5 or > 2.5)",
-        "reject_zh": "存在一阶自相关：标准误需用 HAC/Newey-West 修正",
+        "reject_zh": "first-order autocorrelation present: use HAC/Newey-West standard errors",
         "reject_en": "first-order autocorrelation present: use HAC/Newey-West standard errors",
-        "retain_zh": "无一阶自相关",
+        "retain_zh": "no first-order autocorrelation",
         "retain_en": "no first-order autocorrelation",
         "ref": "Durbin, J. & Watson, G. S. (1951). Testing for serial correlation in least squares regression II. Biometrika 38(1/2), 159-178.",
         "short_ref": "Durbin & Watson (1951)",
     },
     {
         "key": "adf",
-        "name_zh": "ADF 单位根检验",
+        "name_zh": "Augmented Dickey-Fuller unit-root test",
         "name_en": "Augmented Dickey-Fuller unit-root test",
-        "family_zh": "时序",
+        "family_zh": "Time series",
         "family_en": "Time series",
-        "h0_zh": "序列存在单位根（非平稳）",
+        "h0_zh": "the series has a unit root (non-stationary)",
         "h0_en": "the series has a unit root (non-stationary)",
         "stat_name": "τ",
-        "formula": "Δy_t = α + βt + γ y_{t−1} + Σ δ_i Δy_{t−i} + ε_t，检验 γ = 0",
-        "assume_zh": "残差无自相关（滞后阶数需足够）；结构性断点会削弱功效",
+        "formula": "Δy_t = α + βt + γ y_{t−1} + Σ δ_i Δy_{t−i} + ε_t, test γ = 0",
+        "assume_zh": "no residual autocorrelation (enough lags); structural breaks destroy power",
         "assume_en": "no residual autocorrelation (enough lags); structural breaks destroy power",
-        "use_zh": "建模/ITS 前判断是否需要差分，避免伪回归",
+        "use_zh": "deciding whether to difference before modelling, to avoid spurious regression",
         "use_en": "deciding whether to difference before modelling, to avoid spurious regression",
-        "reject_zh": "拒绝单位根：序列平稳，可直接建模",
+        "reject_zh": "unit root rejected: the series is stationary and can be modelled directly",
         "reject_en": "unit root rejected: the series is stationary and can be modelled directly",
-        "retain_zh": "不能拒绝单位根：先差分/去趋势，或改用带趋势的结构模型",
+        "retain_zh": "cannot reject a unit root: difference/de-trend, or model the trend explicitly",
         "retain_en": "cannot reject a unit root: difference/de-trend, or model the trend explicitly",
         "ref": "Dickey, D. A. & Fuller, W. A. (1979). Distribution of the estimators for autoregressive time series with a unit root. JASA 74(366), 427-431.",
         "short_ref": "Dickey & Fuller (1979)",
     },
     {
         "key": "kpss",
-        "name_zh": "KPSS 平稳性检验",
+        "name_zh": "KPSS stationarity test",
         "name_en": "KPSS stationarity test",
-        "family_zh": "时序",
+        "family_zh": "Time series",
         "family_en": "Time series",
-        "h0_zh": "序列是（趋势）平稳的",
+        "h0_zh": "the series is (trend-)stationary",
         "h0_en": "the series is (trend-)stationary",
         "stat_name": "LM",
-        "formula": "LM = (1/n²) Σ S_t² / σ̂²，S_t 为去趋势后的累积残差",
-        "assume_zh": "残差无自相关；与 ADF 的原假设相反",
+        "formula": "LM = (1/n²) Σ S_t² / σ̂², S_t = cumulative de-trended residuals",
+        "assume_zh": "no residual autocorrelation; the null is the opposite of ADF's",
         "assume_en": "no residual autocorrelation; the null is the opposite of ADF's",
-        "use_zh": "与 ADF 互补：两者结论一致时平稳性判断更可靠",
+        "use_zh": "complements ADF: agreement across the two is much stronger evidence",
         "use_en": "complements ADF: agreement across the two is much stronger evidence",
-        "reject_zh": "拒绝平稳：序列含单位根或确定性趋势",
+        "reject_zh": "stationarity rejected: the series has a unit root or a deterministic trend",
         "reject_en": "stationarity rejected: the series has a unit root or a deterministic trend",
-        "retain_zh": "不能拒绝平稳，序列可按平稳处理",
+        "retain_zh": "stationarity not rejected",
         "retain_en": "stationarity not rejected",
         "ref": "Kwiatkowski, D., Phillips, P. C. B., Schmidt, P. & Shin, Y. (1992). Testing the null hypothesis of stationarity. Journal of Econometrics 54(1-3), 159-178.",
         "short_ref": "Kwiatkowski et al. (1992)",
@@ -538,84 +538,84 @@ _RAW_CATALOGUE: List[Dict[str, Any]] = [
     # ---------------------------------------------------------- regression
     {
         "key": "breusch_pagan",
-        "name_zh": "Breusch-Pagan 异方差检验",
+        "name_zh": "Breusch-Pagan heteroskedasticity test",
         "name_en": "Breusch-Pagan heteroskedasticity test",
-        "family_zh": "回归",
+        "family_zh": "Regression",
         "family_en": "Regression",
-        "h0_zh": "残差方差与解释变量无关（同方差）",
+        "h0_zh": "residual variance is unrelated to the regressors (homoskedastic)",
         "h0_en": "residual variance is unrelated to the regressors (homoskedastic)",
         "stat_name": "LM",
         "formula": "LM = n · R²(e² ~ X) ~ χ²(k−1)",
-        "assume_zh": "残差独立；线性回归设定",
+        "assume_zh": "independent residuals; a linear specification",
         "assume_en": "independent residuals; a linear specification",
-        "use_zh": "回归/DiD 的推断前提检查",
+        "use_zh": "inference prerequisite for OLS/DiD",
         "use_en": "inference prerequisite for OLS/DiD",
-        "reject_zh": "存在异方差：用稳健（HC1/HC3）或聚类标准误",
+        "reject_zh": "heteroskedasticity present: use robust (HC1/HC3) or clustered SEs",
         "reject_en": "heteroskedasticity present: use robust (HC1/HC3) or clustered SEs",
-        "retain_zh": "同方差假设可接受",
+        "retain_zh": "homoskedasticity is acceptable",
         "retain_en": "homoskedasticity is acceptable",
         "ref": "Breusch, T. S. & Pagan, A. R. (1979). A simple test for heteroscedasticity and random coefficient variation. Econometrica 47(5), 1287-1294.",
         "short_ref": "Breusch & Pagan (1979)",
     },
     {
         "key": "variance_inflation",
-        "name_zh": "方差膨胀因子（VIF，多重共线性）",
+        "name_zh": "Variance inflation factor (multicollinearity)",
         "name_en": "Variance inflation factor (multicollinearity)",
-        "family_zh": "回归",
+        "family_zh": "Regression",
         "family_en": "Regression",
-        "h0_zh": "该变量与其他解释变量不相关（VIF = 1）",
+        "h0_zh": "the feature is uncorrelated with the other regressors (VIF = 1)",
         "h0_en": "the feature is uncorrelated with the other regressors (VIF = 1)",
         "stat_name": "VIF",
-        "formula": "VIF_j = 1 / (1 − R_j²)，R_j² 为 x_j 对其余变量的回归 R²",
-        "assume_zh": "线性模型；数值型特征（类别需先编码）",
+        "formula": "VIF_j = 1 / (1 − R_j²), R_j² = R² of x_j on the other regressors",
+        "assume_zh": "linear model; numeric features (encode categoricals first)",
         "assume_en": "linear model; numeric features (encode categoricals first)",
-        "use_zh": "建模/回归前的共线性体检（VIF > 10 需处理）",
+        "use_zh": "pre-modelling collinearity screen (act above VIF 10)",
         "use_en": "pre-modelling collinearity screen (act above VIF 10)",
-        "reject_zh": "存在强共线性：系数方向不稳定，用正则化或删/并变量",
+        "reject_zh": "strong collinearity: coefficient signs become unstable — regularise or drop/merge features",
         "reject_en": "strong collinearity: coefficient signs become unstable — regularise or drop/merge features",
-        "retain_zh": "无明显共线性",
+        "retain_zh": "no material collinearity",
         "retain_en": "no material collinearity",
         "ref": "Marquardt, D. W. (1970). Generalized inverses, ridge regression, biased linear estimation, and nonlinear estimation. Technometrics 12(3), 591-612.",
         "short_ref": "Marquardt (1970)",
     },
     {
         "key": "hosmer_lemeshow",
-        "name_zh": "Hosmer-Lemeshow 校准检验",
+        "name_zh": "Hosmer-Lemeshow calibration test",
         "name_en": "Hosmer-Lemeshow calibration test",
-        "family_zh": "回归",
+        "family_zh": "Regression",
         "family_en": "Regression",
-        "h0_zh": "预测概率与 observed 转化率一致（模型校准良好）",
+        "h0_zh": "predicted probabilities match observed rates (the model is calibrated)",
         "h0_en": "predicted probabilities match observed rates (the model is calibrated)",
         "stat_name": "χ²",
         "formula": "χ² = Σ_{g=1..G} (O_g − E_g)² / [E_g(1 − E_g/n_g)] ~ χ²(G−2)",
-        "assume_zh": "二元结果；按预测概率分 10 组（每组样本足够）",
+        "assume_zh": "binary outcome; 10 groups by predicted probability with enough units per group",
         "assume_en": "binary outcome; 10 groups by predicted probability with enough units per group",
-        "use_zh": "分类模型上线前检查概率是否可直接当转化率使用",
+        "use_zh": "before using predicted probabilities as conversion rates in a decision",
         "use_en": "before using predicted probabilities as conversion rates in a decision",
-        "reject_zh": "校准不足：排序可能仍可用，但概率不能直接当比率读",
+        "reject_zh": "poor calibration: ranking may still work but the probabilities are not rates",
         "reject_en": "poor calibration: ranking may still work but the probabilities are not rates",
-        "retain_zh": "校准良好，概率可直接解读",
+        "retain_zh": "calibrated; probabilities can be read directly",
         "retain_en": "calibrated; probabilities can be read directly",
         "ref": "Hosmer, D. W. & Lemesbow, S. (1980). Goodness of fit tests for the multiple logistic regression model. Communications in Statistics A9(10), 1043-1069.",
         "short_ref": "Hosmer & Lemeshow (1980)",
     },
     {
         "key": "wald_joint_f",
-        "name_zh": "Wald 联合 F 检验（前置期系数）",
+        "name_zh": "Wald joint F test (pre-period leads)",
         "name_en": "Wald joint F test (pre-period leads)",
-        "family_zh": "回归",
+        "family_zh": "Regression",
         "family_en": "Regression",
-        "h0_zh": "前置期所有事件研究系数联合为 0（平行趋势成立）",
+        "h0_zh": "all pre-period event-study coefficients are jointly zero (parallel trends hold)",
         "h0_en": "all pre-period event-study coefficients are jointly zero (parallel trends hold)",
         "stat_name": "F",
         "formula": "F = [(RSS_r − RSS_u)/q] / [RSS_u/(n−k)]",
-        "assume_zh": "同一回归设定；聚类稳健协方差",
+        "assume_zh": "one specification with cluster-robust covariance",
         "assume_en": "one specification with cluster-robust covariance",
-        "use_zh": "DiD 可信度的核心检验：前置期不应已经出现分化",
+        "use_zh": "the core credibility test for DiD: no pre-existing divergence",
         "use_en": "the core credibility test for DiD: no pre-existing divergence",
-        "reject_zh": "平行趋势不成立：DiD 的 ATT 有偏，不能作为因果结论",
+        "reject_zh": "parallel trends fail: the ATT is biased and cannot be read as causal",
         "reject_en": "parallel trends fail: the ATT is biased and cannot be read as causal",
-        "retain_zh": "未发现前置期分化，平行趋势可接受",
+        "retain_zh": "no pre-trend detected; parallel trends is acceptable",
         "retain_en": "no pre-trend detected; parallel trends is acceptable",
         "ref": "Angrist, J. D. & Pischke, J.-S. (2009). Mostly Harmless Econometrics, Ch. 5. Princeton University Press.",
         "short_ref": "Angrist & Pischke (2009), Ch. 5",
@@ -623,84 +623,84 @@ _RAW_CATALOGUE: List[Dict[str, Any]] = [
     # ---------------------------------------------------------- resampling
     {
         "key": "permutation",
-        "name_zh": "置换检验（随机重排）",
+        "name_zh": "Permutation test (label shuffling)",
         "name_en": "Permutation test (label shuffling)",
-        "family_zh": "重抽样",
+        "family_zh": "Resampling",
         "family_en": "Resampling",
-        "h0_zh": "处理标签与结果无关（可交换性）",
+        "h0_zh": "treatment labels are exchangeable with respect to the outcome",
         "h0_en": "treatment labels are exchangeable with respect to the outcome",
         "stat_name": "p",
         "formula": "p = [#{|T*| ≥ |T_obs|} + 1] / (B + 1)",
-        "assume_zh": "可交换性（随机分配或随机抽取）；B 越大越精确",
+        "assume_zh": "exchangeability from random assignment/sampling; larger B means more precision",
         "assume_en": "exchangeability from random assignment/sampling; larger B means more precision",
-        "use_zh": "交叉验证解析 p 值，分布假设可疑时的首选",
+        "use_zh": "cross-checking analytic p-values, and the default when distributional assumptions are doubtful",
         "use_en": "cross-checking analytic p-values, and the default when distributional assumptions are doubtful",
-        "reject_zh": "观测差异在重排零分布中罕见：效应不是随机波动",
+        "reject_zh": "the observed difference is rare under relabelling: not random noise",
         "reject_en": "the observed difference is rare under relabelling: not random noise",
-        "retain_zh": "观测差异在零分布内常见：不显著",
+        "retain_zh": "the observed difference is common under relabelling: not significant",
         "retain_en": "the observed difference is common under relabelling: not significant",
         "ref": "Fisher, R. A. (1935). The Design of Experiments. Oliver & Boyd; see also Efron & Tibshirani (1993), An Introduction to the Bootstrap, Ch. 15.",
         "short_ref": "Fisher (1935); Efron & Tibshirani (1993)",
     },
     {
         "key": "bootstrap",
-        "name_zh": "Bootstrap 百分位置信区间",
+        "name_zh": "Bootstrap percentile interval",
         "name_en": "Bootstrap percentile interval",
-        "family_zh": "重抽样",
+        "family_zh": "Resampling",
         "family_en": "Resampling",
-        "h0_zh": "（区间估计，不检验单一原假设）",
+        "h0_zh": "(interval estimate, not a single null)",
         "h0_en": "(interval estimate, not a single null)",
         "stat_name": "CI",
-        "formula": "θ̂*_b 由有放回重抽样得到，取 [q_{α/2}, q_{1−α/2}]",
-        "assume_zh": "重抽样单元必须与随机化单元一致；B ≥ 1000 较稳",
+        "formula": "θ̂*_b from resampling with replacement, take [q_{α/2}, q_{1−α/2}]",
+        "assume_zh": "resample the randomisation unit, not the row; B ≥ 1,000 for stability",
         "assume_en": "resample the randomisation unit, not the row; B ≥ 1,000 for stability",
-        "use_zh": "重尾金额、比率指标、匹配/合成控制的区间估计",
+        "use_zh": "heavy-tailed money metrics, ratio metrics, matching and synthetic-control intervals",
         "use_en": "heavy-tailed money metrics, ratio metrics, matching and synthetic-control intervals",
-        "reject_zh": "区间不含 0：效应显著（与检验结论互为印证）",
+        "reject_zh": "interval excludes 0: the effect is significant",
         "reject_en": "interval excludes 0: the effect is significant",
-        "retain_zh": "区间含 0：方向尚未确定",
+        "retain_zh": "interval contains 0: the direction is undetermined",
         "retain_en": "interval contains 0: the direction is undetermined",
         "ref": "Efron, B. (1979). Bootstrap methods: another look at the jackknife. Annals of Statistics 7(1), 1-26.",
         "short_ref": "Efron (1979)",
     },
     {
         "key": "tost",
-        "name_zh": "TOST 等效性检验",
+        "name_zh": "Two one-sided tests (TOST) for equivalence",
         "name_en": "Two one-sided tests (TOST) for equivalence",
-        "family_zh": "重抽样",
+        "family_zh": "Resampling",
         "family_en": "Resampling",
-        "h0_zh": "两组差异超出等效界 [−Δ, Δ]",
+        "h0_zh": "the difference lies outside the equivalence margin [−Δ, Δ]",
         "h0_en": "the difference lies outside the equivalence margin [−Δ, Δ]",
         "stat_name": "t",
-        "formula": "p = max(p_lower, p_upper)，两个单侧 t 检验在 ±Δ 处",
-        "assume_zh": "需预先声明等效界 Δ；两样本独立近似正态",
+        "formula": "p = max(p_lower, p_upper), two one-sided t tests at ±Δ",
+        "assume_zh": "a pre-declared margin Δ; approximately normal independent samples",
         "assume_en": "a pre-declared margin Δ; approximately normal independent samples",
-        "use_zh": "A/A 测试、改动“无影响”的证明、护栏指标",
+        "use_zh": "A/A tests, proving a change is neutral, guardrail metrics",
         "use_en": "A/A tests, proving a change is neutral, guardrail metrics",
-        "reject_zh": "差异落在等效界内：可以认为两组等效（不是“没检出差异”）",
+        "reject_zh": "the difference is within the margin: the arms are equivalent (not merely undetected)",
         "reject_en": "the difference is within the margin: the arms are equivalent (not merely undetected)",
-        "retain_zh": "不能宣称等效：样本不足或差异确实超界",
+        "retain_zh": "equivalence cannot be claimed: underpowered or genuinely different",
         "retain_en": "equivalence cannot be claimed: underpowered or genuinely different",
         "ref": "Schuirmann, D. J. (1987). A comparison of the two one-sided tests procedure and the power approach. Journal of Pharmacokinetics and Biopharmaceutics 15(6), 657-680.",
         "short_ref": "Schuirmann (1987)",
     },
     {
         "key": "bh_fdr",
-        "name_zh": "Benjamini-Hochberg FDR 校正",
+        "name_zh": "Benjamini-Hochberg FDR control",
         "name_en": "Benjamini-Hochberg FDR control",
-        "family_zh": "多重检验",
+        "family_zh": "Multiplicity",
         "family_en": "Multiplicity",
-        "h0_zh": "该指标无效应（对 m 个指标同时检验）",
+        "h0_zh": "no effect for that metric, across m simultaneous tests",
         "h0_en": "no effect for that metric, across m simultaneous tests",
         "stat_name": "p_adj",
         "formula": "p_(i)^adj = min_{j ≥ i} p_(j) · m / j",
-        "assume_zh": "检验之间正相关或独立；控制 FDR 而非 FWER",
+        "assume_zh": "independent or positively dependent tests; controls FDR, not FWER",
         "assume_en": "independent or positively dependent tests; controls FDR, not FWER",
-        "use_zh": "一次读多个指标 / 多个分群时的显著性判定",
+        "use_zh": "declaring significance when reading many metrics or segments at once",
         "use_en": "declaring significance when reading many metrics or segments at once",
-        "reject_zh": "校正后仍显著：可作为上线依据",
+        "reject_zh": "still significant after correction: usable for the ship decision",
         "reject_en": "still significant after correction: usable for the ship decision",
-        "retain_zh": "校正后不显著：不要按单个 p 值下结论",
+        "retain_zh": "not significant after correction: do not act on the raw p-value",
         "retain_en": "not significant after correction: do not act on the raw p-value",
         "ref": "Benjamini, Y. & Hochberg, Y. (1995). Controlling the false discovery rate. JRSS B 57(1), 289-300.",
         "short_ref": "Benjamini & Hochberg (1995)",
@@ -851,7 +851,7 @@ def _skipped(key: str, reason_zh: str, reason_en: str, n: Optional[int] = None) 
             "status": "skipped",
             "decision": "skipped",
             "significant": None,
-            "conclusion_zh": f"未执行：{reason_zh}",
+            "conclusion_zh": f"skipped: {reason_zh}",
             "conclusion_en": f"skipped: {reason_en}",
         }
     )
@@ -869,30 +869,30 @@ skipped = _skipped
 def shapiro_wilk(x: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
     arr = _clean(x)
     if len(arr) < 3:
-        return _skipped("shapiro_wilk", "样本不足 3 个", "fewer than 3 observations", len(arr))
+        return _skipped("shapiro_wilk", "fewer than 3 observations", "fewer than 3 observations", len(arr))
     if len(arr) > 5000:
         return _skipped(
             "shapiro_wilk",
-            "样本超过 5000，Shapiro-Wilk 不再可靠（已改用 D'Agostino K²）",
+            "n > 5,000; Shapiro-Wilk is unreliable (D'Agostino K² used instead)",
             "n > 5,000; Shapiro-Wilk is unreliable (D'Agostino K² used instead)",
             len(arr),
         )
     try:
         stat, p = stats.shapiro(arr)
     except Exception as exc:  # noqa: BLE001 - a diagnostic must never break the readout
-        return _skipped("shapiro_wilk", f"计算失败：{exc}", f"computation failed: {exc}", len(arr))
+        return _skipped("shapiro_wilk", f"computation failed: {exc}", f"computation failed: {exc}", len(arr))
     return _result("shapiro_wilk", stat, p, n=len(arr), alpha=alpha)
 
 
 def dagostino_k2(x: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
     arr = _clean(x)
     if len(arr) < 20:
-        return _skipped("dagostino_k2", "样本不足 20 个", "fewer than 20 observations", len(arr))
+        return _skipped("dagostino_k2", "fewer than 20 observations", "fewer than 20 observations", len(arr))
     try:
         stat, p = stats.normaltest(arr)
     except Exception as exc:  # noqa: BLE001
-        return _skipped("dagostino_k2", f"计算失败：{exc}", f"computation failed: {exc}", len(arr))
-    note_zh = "样本较大时轻微偏离也会显著，重点看偏度/峰度的方向与量级" if len(arr) > 20000 else ""
+        return _skipped("dagostino_k2", f"computation failed: {exc}", f"computation failed: {exc}", len(arr))
+    note_zh = "at large n even small departures reject; read the direction and size of skew/kurtosis" if len(arr) > 20000 else ""
     note_en = "at large n even small departures reject; read the direction and size of skew/kurtosis" if len(arr) > 20000 else ""
     return _result("dagostino_k2", stat, p, df=2, n=len(arr), alpha=alpha, note_zh=note_zh, note_en=note_en)
 
@@ -900,18 +900,18 @@ def dagostino_k2(x: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
 def jarque_bera(x: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
     arr = _clean(x)
     if len(arr) < 8:
-        return _skipped("jarque_bera", "样本不足 8 个", "fewer than 8 observations", len(arr))
+        return _skipped("jarque_bera", "fewer than 8 observations", "fewer than 8 observations", len(arr))
     try:
         stat, p = stats.jarque_bera(arr)
     except Exception as exc:  # noqa: BLE001
-        return _skipped("jarque_bera", f"计算失败：{exc}", f"computation failed: {exc}", len(arr))
+        return _skipped("jarque_bera", f"computation failed: {exc}", f"computation failed: {exc}", len(arr))
     return _result("jarque_bera", stat, p, df=2, n=len(arr), alpha=alpha)
 
 
 def anderson_darling(x: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
     arr = _clean(x)
     if len(arr) < 8:
-        return _skipped("anderson_darling", "样本不足 8 个", "fewer than 8 observations", len(arr))
+        return _skipped("anderson_darling", "fewer than 8 observations", "fewer than 8 observations", len(arr))
     try:
         with warnings.catch_warnings():
             # scipy >= 1.17 deprecates the critical-value table; the table is
@@ -919,7 +919,7 @@ def anderson_darling(x: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
             warnings.simplefilter("ignore", FutureWarning)
             res = stats.anderson(arr, dist="norm")
     except Exception as exc:  # noqa: BLE001
-        return _skipped("anderson_darling", f"计算失败：{exc}", f"computation failed: {exc}", len(arr))
+        return _skipped("anderson_darling", f"computation failed: {exc}", f"computation failed: {exc}", len(arr))
     # scipy reports critical values at 15/10/5/2.5/1%; interpolate p on the log
     # scale between the tabulated points, and label the p as approximate.
     sig = np.asarray(res.significance_level, dtype=float) / 100.0
@@ -939,7 +939,7 @@ def anderson_darling(x: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
         n=len(arr),
         alpha=alpha,
         p_approx=True,
-        note_zh="p 值由临界值表插值近似",
+        note_zh="p approximated from the critical-value table",
         note_en="p approximated from the critical-value table",
     )
 
@@ -957,17 +957,17 @@ def normality_tests(x: Sequence[float], alpha: float = 0.05) -> List[Dict[str, A
 def levene(a: Sequence[float], b: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
     x, y = _clean(a), _clean(b)
     if len(x) < 2 or len(y) < 2:
-        return _skipped("levene", "每组至少需要 2 个观测", "each group needs at least 2 observations", len(x) + len(y))
+        return _skipped("levene", "each group needs at least 2 observations", "each group needs at least 2 observations", len(x) + len(y))
     try:
         stat, p = stats.levene(x, y, center="median")
     except Exception as exc:  # noqa: BLE001
-        return _skipped("levene", f"计算失败：{exc}", f"computation failed: {exc}", len(x) + len(y))
+        return _skipped("levene", f"computation failed: {exc}", f"computation failed: {exc}", len(x) + len(y))
     # With mass at zero (revenue is 0 for most non-buyers) the deviation from the
     # median is the value itself, so Levene collapses into a location test. Say
     # so rather than reporting a "variance" verdict nobody can use.
     note_zh = note_en = ""
     if np.median(x) == 0 or np.median(y) == 0:
-        note_zh = "样本中位数为 0（大量零值），Levene 会退化为位置比较，方差结论仅供参考"
+        note_zh = "a sample median is 0 (mass at zero), so Levene degenerates into a location test"
         note_en = "a sample median is 0 (mass at zero), so Levene degenerates into a location test"
     return _result("levene", stat, p, df=1, n=len(x) + len(y), alpha=alpha, note_zh=note_zh, note_en=note_en)
 
@@ -975,11 +975,11 @@ def levene(a: Sequence[float], b: Sequence[float], alpha: float = 0.05) -> Dict[
 def bartlett(a: Sequence[float], b: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
     x, y = _clean(a), _clean(b)
     if len(x) < 2 or len(y) < 2:
-        return _skipped("bartlett", "每组至少需要 2 个观测", "each group needs at least 2 observations", len(x) + len(y))
+        return _skipped("bartlett", "each group needs at least 2 observations", "each group needs at least 2 observations", len(x) + len(y))
     try:
         stat, p = stats.bartlett(x, y)
     except Exception as exc:  # noqa: BLE001
-        return _skipped("bartlett", f"计算失败：{exc}", f"computation failed: {exc}", len(x) + len(y))
+        return _skipped("bartlett", f"computation failed: {exc}", f"computation failed: {exc}", len(x) + len(y))
     return _result("bartlett", stat, p, df=1, n=len(x) + len(y), alpha=alpha)
 
 
@@ -989,7 +989,7 @@ def bartlett(a: Sequence[float], b: Sequence[float], alpha: float = 0.05) -> Dic
 def student_t(a: Sequence[float], b: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
     x, y = _clean(a), _clean(b)
     if len(x) < 2 or len(y) < 2:
-        return _skipped("student_t", "每组至少需要 2 个观测", "each group needs at least 2 observations", len(x) + len(y))
+        return _skipped("student_t", "each group needs at least 2 observations", "each group needs at least 2 observations", len(x) + len(y))
     stat, p = stats.ttest_ind(y, x, equal_var=True)
     return _result("student_t", stat, p, df=len(x) + len(y) - 2, n=len(x) + len(y), alpha=alpha)
 
@@ -997,7 +997,7 @@ def student_t(a: Sequence[float], b: Sequence[float], alpha: float = 0.05) -> Di
 def welch_t(a: Sequence[float], b: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
     x, y = _clean(a), _clean(b)
     if len(x) < 2 or len(y) < 2:
-        return _skipped("welch_t", "每组至少需要 2 个观测", "each group needs at least 2 observations", len(x) + len(y))
+        return _skipped("welch_t", "each group needs at least 2 observations", "each group needs at least 2 observations", len(x) + len(y))
     stat, p = stats.ttest_ind(y, x, equal_var=False)
     vx, vy = x.var(ddof=1) / len(x), y.var(ddof=1) / len(y)
     df = (vx + vy) ** 2 / (vx**2 / (len(x) - 1) + vy**2 / (len(y) - 1)) if (vx + vy) > 0 else float("nan")
@@ -1008,7 +1008,7 @@ def paired_t(a: Sequence[float], b: Sequence[float], alpha: float = 0.05) -> Dic
     x, y = _clean(a), _clean(b)
     n = min(len(x), len(y))
     if n < 3:
-        return _skipped("paired_t", "配对样本不足 3 对", "fewer than 3 pairs", n)
+        return _skipped("paired_t", "fewer than 3 pairs", "fewer than 3 pairs", n)
     stat, p = stats.ttest_rel(y[:n], x[:n])
     return _result("paired_t", stat, p, df=n - 1, n=n, alpha=alpha)
 
@@ -1017,21 +1017,21 @@ def wilcoxon(a: Sequence[float], b: Sequence[float], alpha: float = 0.05) -> Dic
     x, y = _clean(a), _clean(b)
     n = min(len(x), len(y))
     if n < 6:
-        return _skipped("wilcoxon", "配对样本不足 6 对", "fewer than 6 pairs", n)
+        return _skipped("wilcoxon", "fewer than 6 pairs", "fewer than 6 pairs", n)
     diff = y[:n] - x[:n]
     if np.allclose(diff, 0):
-        return _skipped("wilcoxon", "配对差值全为 0", "all paired differences are zero", n)
+        return _skipped("wilcoxon", "all paired differences are zero", "all paired differences are zero", n)
     try:
         stat, p = stats.wilcoxon(diff, zero_method="wilcox", alternative="two-sided")
     except Exception as exc:  # noqa: BLE001
-        return _skipped("wilcoxon", f"计算失败：{exc}", f"computation failed: {exc}", n)
+        return _skipped("wilcoxon", f"computation failed: {exc}", f"computation failed: {exc}", n)
     return _result("wilcoxon", stat, p, n=n, alpha=alpha)
 
 
 def mann_whitney(a: Sequence[float], b: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
     x, y = _clean(a), _clean(b)
     if len(x) < 3 or len(y) < 3:
-        return _skipped("mann_whitney", "每组至少需要 3 个观测", "each group needs at least 3 observations", len(x) + len(y))
+        return _skipped("mann_whitney", "each group needs at least 3 observations", "each group needs at least 3 observations", len(x) + len(y))
     stat, p = stats.mannwhitneyu(y, x, alternative="two-sided")
     return _result("mann_whitney", stat, p, n=len(x) + len(y), alpha=alpha)
 
@@ -1040,7 +1040,7 @@ def kruskal_wallis(groups: Sequence[Sequence[float]], alpha: float = 0.05) -> Di
     cleaned = [_clean(g) for g in groups]
     cleaned = [g for g in cleaned if len(g) >= 2]
     if len(cleaned) < 3:
-        return _skipped("kruskal_wallis", "需要至少 3 组、每组 2 个观测", "needs at least 3 groups with 2 observations each")
+        return _skipped("kruskal_wallis", "needs at least 3 groups with 2 observations each", "needs at least 3 groups with 2 observations each")
     stat, p = stats.kruskal(*cleaned)
     return _result("kruskal_wallis", stat, p, df=len(cleaned) - 1, n=int(sum(len(g) for g in cleaned)), alpha=alpha)
 
@@ -1049,7 +1049,7 @@ def one_way_anova(groups: Sequence[Sequence[float]], alpha: float = 0.05) -> Dic
     cleaned = [_clean(g) for g in groups]
     cleaned = [g for g in cleaned if len(g) >= 2]
     if len(cleaned) < 3:
-        return _skipped("one_way_anova", "需要至少 3 组、每组 2 个观测", "needs at least 3 groups with 2 observations each")
+        return _skipped("one_way_anova", "needs at least 3 groups with 2 observations each", "needs at least 3 groups with 2 observations each")
     stat, p = stats.f_oneway(*cleaned)
     return _result("one_way_anova", stat, p, df=len(cleaned) - 1, n=int(sum(len(g) for g in cleaned)), alpha=alpha)
 
@@ -1059,7 +1059,7 @@ def one_way_anova(groups: Sequence[Sequence[float]], alpha: float = 0.05) -> Dic
 # --------------------------------------------------------------------------- #
 def two_proportion_z(x1: int, n1: int, x2: int, n2: int, alpha: float = 0.05) -> Dict[str, Any]:
     if min(n1, n2) <= 0:
-        return _skipped("two_proportion_z", "分组样本为空", "an arm has no observations")
+        return _skipped("two_proportion_z", "an arm has no observations", "an arm has no observations")
     res = inf.two_proportion_test(int(x1), int(n1), int(x2), int(n2), alpha)
     return _result(
         "two_proportion_z",
@@ -1074,7 +1074,7 @@ def two_proportion_z(x1: int, n1: int, x2: int, n2: int, alpha: float = 0.05) ->
 def chi_square_gof(observed: Sequence[int], expected_ratio: Optional[Sequence[float]] = None, alpha: float = 0.05) -> Dict[str, Any]:
     obs = np.asarray(observed, dtype=float)
     if obs.sum() <= 0:
-        return _skipped("chi_square_gof", "无观测计数", "no observed counts")
+        return _skipped("chi_square_gof", "no observed counts", "no observed counts")
     ratio = np.asarray(expected_ratio, dtype=float) if expected_ratio is not None else np.ones(len(obs)) / len(obs)
     expected = ratio * obs.sum()
     chi2 = float(((obs - expected) ** 2 / expected).sum())
@@ -1093,11 +1093,11 @@ def chi_square_gof(observed: Sequence[int], expected_ratio: Optional[Sequence[fl
 def chi_square_independence(table: Sequence[Sequence[int]], alpha: float = 0.05) -> Dict[str, Any]:
     arr = np.asarray(table, dtype=float)
     if arr.ndim != 2 or arr.sum() <= 0:
-        return _skipped("chi_square_independence", "列联表为空", "empty contingency table")
+        return _skipped("chi_square_independence", "empty contingency table", "empty contingency table")
     try:
         chi2, p, dof, expected = stats.chi2_contingency(arr, correction=True)
     except Exception as exc:  # noqa: BLE001
-        return _skipped("chi_square_independence", f"计算失败：{exc}", f"computation failed: {exc}")
+        return _skipped("chi_square_independence", f"computation failed: {exc}", f"computation failed: {exc}")
     sparse = bool((expected < 5).any())
     return _result(
         "chi_square_independence",
@@ -1106,7 +1106,7 @@ def chi_square_independence(table: Sequence[Sequence[int]], alpha: float = 0.05)
         df=dof,
         n=int(arr.sum()),
         alpha=alpha,
-        note_zh="存在期望频数 < 5 的格子，p 值偏保守" if sparse else "",
+        note_zh="some expected counts are < 5, so p is conservative" if sparse else "",
         note_en="some expected counts are < 5, so p is conservative" if sparse else "",
         extra={"cramers_v": float(np.sqrt(chi2 / (arr.sum() * (min(arr.shape) - 1)))) if arr.sum() else 0.0},
     )
@@ -1115,11 +1115,11 @@ def chi_square_independence(table: Sequence[Sequence[int]], alpha: float = 0.05)
 def fisher_exact(table: Sequence[Sequence[int]], alpha: float = 0.05) -> Dict[str, Any]:
     arr = np.asarray(table, dtype=int)
     if arr.shape != (2, 2):
-        return _skipped("fisher_exact", "仅支持 2x2 列联表", "only 2x2 tables are supported")
+        return _skipped("fisher_exact", "only 2x2 tables are supported", "only 2x2 tables are supported")
     try:
         _, p = stats.fisher_exact(arr)
     except Exception as exc:  # noqa: BLE001
-        return _skipped("fisher_exact", f"计算失败：{exc}", f"computation failed: {exc}")
+        return _skipped("fisher_exact", f"computation failed: {exc}", f"computation failed: {exc}")
     # Fisher's statistic is the odds ratio; report it as the statistic with p.
     odds = float((arr[0, 0] * arr[1, 1]) / max(arr[0, 1] * arr[1, 0], 1))
     return _result("fisher_exact", odds, p, n=int(arr.sum()), alpha=alpha, extra={"odds_ratio": odds})
@@ -1127,11 +1127,11 @@ def fisher_exact(table: Sequence[Sequence[int]], alpha: float = 0.05) -> Dict[st
 
 def mcnemar(b: int, c: int, alpha: float = 0.05) -> Dict[str, Any]:
     if b + c == 0:
-        return _skipped("mcnemar", "无不一致配对", "no discordant pairs")
+        return _skipped("mcnemar", "no discordant pairs", "no discordant pairs")
     if b + c < 25:
         p = float(stats.binomtest(b, b + c, 0.5).pvalue)
         chi2 = float("nan")
-        note_zh, note_en = "小样本，使用精确二项检验", "small sample: exact binomial test"
+        note_zh, note_en = "small sample: exact binomial test", "small sample: exact binomial test"
     else:
         chi2 = float((b - c) ** 2 / (b + c))
         p = float(stats.chi2.sf(chi2, df=1))
@@ -1148,7 +1148,7 @@ def mcnemar(b: int, c: int, alpha: float = 0.05) -> Dict[str, Any]:
 def ks_two_sample(a: Sequence[float], b: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
     x, y = _clean(a), _clean(b)
     if len(x) < 5 or len(y) < 5:
-        return _skipped("ks_two_sample", "每组至少需要 5 个观测", "each group needs at least 5 observations", len(x) + len(y))
+        return _skipped("ks_two_sample", "each group needs at least 5 observations", "each group needs at least 5 observations", len(x) + len(y))
     stat, p = stats.ks_2samp(y, x)
     return _result("ks_two_sample", stat, p, n=len(x) + len(y), alpha=alpha)
 
@@ -1160,12 +1160,12 @@ def ljung_box(x: Sequence[float], lags: Optional[int] = None, alpha: float = 0.0
     arr = _clean(x)
     n = len(arr)
     if n < 12:
-        return _skipped("ljung_box", "序列不足 12 个点", "fewer than 12 observations", n)
+        return _skipped("ljung_box", "fewer than 12 observations", "fewer than 12 observations", n)
     m = int(lags or min(10, max(1, n // 5)))
     centred = arr - arr.mean()
     denom = float((centred**2).sum())
     if denom <= 0:
-        return _skipped("ljung_box", "序列方差为 0", "zero variance series", n)
+        return _skipped("ljung_box", "zero variance series", "zero variance series", n)
     q = 0.0
     for k in range(1, m + 1):
         r = float((centred[k:] * centred[:-k]).sum() / denom)
@@ -1178,14 +1178,14 @@ def ljung_box(x: Sequence[float], lags: Optional[int] = None, alpha: float = 0.0
 def durbin_watson(resid: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
     arr = _clean(resid)
     if len(arr) < 10:
-        return _skipped("durbin_watson", "残差不足 10 个，DW 不可靠", "fewer than 10 residuals; DW is unreliable", len(arr))
+        return _skipped("durbin_watson", "fewer than 10 residuals; DW is unreliable", "fewer than 10 residuals; DW is unreliable", len(arr))
     denom = float((arr**2).sum())
     if denom <= 0:
-        return _skipped("durbin_watson", "残差全为 0", "residuals are all zero", len(arr))
+        return _skipped("durbin_watson", "residuals are all zero", "residuals are all zero", len(arr))
     dw = float(((np.diff(arr)) ** 2).sum() / denom)
     # DW has no exact p-value; use the common |DW-2| > 0.5 heuristic as the flag.
     p = 1.0 if abs(dw - 2) <= 0.5 else 0.01
-    note_zh = "DW 无精确 p 值，这里用 |DW−2|>0.5 的常用判定"
+    note_zh = "DW has no exact p-value; the |DW-2|>0.5 rule is used"
     note_en = "DW has no exact p-value; the |DW-2|>0.5 rule is used"
     out = _result("durbin_watson", dw, p, n=len(arr), alpha=alpha, note_zh=note_zh, note_en=note_en)
     out["p_approx"] = True
@@ -1195,7 +1195,7 @@ def durbin_watson(resid: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]
 def adf(x: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
     arr = _clean(x)
     if len(arr) < 20:
-        return _skipped("adf", "序列不足 20 个点", "fewer than 20 observations", len(arr))
+        return _skipped("adf", "fewer than 20 observations", "fewer than 20 observations", len(arr))
     try:
         from statsmodels.tsa.stattools import adfuller
 
@@ -1203,14 +1203,14 @@ def adf(x: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
             warnings.simplefilter("ignore")
             stat, p, used_lag, nobs, _, _ = adfuller(arr, autolag="AIC")
     except Exception as exc:  # noqa: BLE001 - statsmodels optional at runtime
-        return _skipped("adf", f"无法执行：{exc}", f"unavailable: {exc}", len(arr))
+        return _skipped("adf", f"unavailable: {exc}", f"unavailable: {exc}", len(arr))
     return _result("adf", stat, p, n=int(nobs), alpha=alpha, extra={"lags": int(used_lag)})
 
 
 def kpss(x: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
     arr = _clean(x)
     if len(arr) < 20:
-        return _skipped("kpss", "序列不足 20 个点", "fewer than 20 observations", len(arr))
+        return _skipped("kpss", "fewer than 20 observations", "fewer than 20 observations", len(arr))
     try:
         from statsmodels.tsa.stattools import kpss as _kpss
 
@@ -1220,10 +1220,10 @@ def kpss(x: Sequence[float], alpha: float = 0.05) -> Dict[str, Any]:
             warnings.simplefilter("ignore")
             stat, p, used_lag, _ = _kpss(arr, regression="c", nlags="auto")
     except Exception as exc:  # noqa: BLE001
-        return _skipped("kpss", f"无法执行：{exc}", f"unavailable: {exc}", len(arr))
+        return _skipped("kpss", f"unavailable: {exc}", f"unavailable: {exc}", len(arr))
     return _result(
         "kpss", stat, p, n=len(arr), alpha=alpha, p_approx=True,
-        note_zh="KPSS 的 p 值来自查表插值，常被截断在 0.01/0.10",
+        note_zh="KPSS p-values are table-interpolated and truncated at 0.01/0.10",
         note_en="KPSS p-values are table-interpolated and truncated at 0.01/0.10",
         extra={"lags": int(used_lag)},
     )
@@ -1238,7 +1238,7 @@ def breusch_pagan(resid: Sequence[float], exog: np.ndarray, alpha: float = 0.05)
     if X.ndim == 1:
         X = X.reshape(-1, 1)
     if len(e) != X.shape[0] or len(e) < 10:
-        return _skipped("breusch_pagan", "残差与设计矩阵不匹配或样本过小", "residual/exog mismatch or too few rows", len(e))
+        return _skipped("breusch_pagan", "residual/exog mismatch or too few rows", "residual/exog mismatch or too few rows", len(e))
     e2 = e**2
     X1 = np.column_stack([np.ones(len(e)), X]) if not np.allclose(X[:, 0], 1) else X
     beta, *_ = np.linalg.lstsq(X1, e2, rcond=None)
@@ -1256,7 +1256,7 @@ def variance_inflation(exog: np.ndarray, names: Optional[Sequence[str]] = None) 
     """VIF per column; the reported statistic is the maximum, details in ``extra``."""
     X = np.asarray(exog, dtype=float)
     if X.ndim != 2 or X.shape[1] < 2 or X.shape[0] < 10:
-        return _skipped("variance_inflation", "解释变量少于 2 个或样本过小", "fewer than 2 regressors or too few rows")
+        return _skipped("variance_inflation", "fewer than 2 regressors or too few rows", "fewer than 2 regressors or too few rows")
     cols = list(names or [f"x{i}" for i in range(X.shape[1])])
     values: List[Tuple[str, float]] = []
     for j in range(X.shape[1]):
@@ -1273,7 +1273,7 @@ def variance_inflation(exog: np.ndarray, names: Optional[Sequence[str]] = None) 
     worst = max(values, key=lambda kv: kv[1])
     out = _result(
         "variance_inflation", worst[1], None, n=X.shape[0],
-        note_zh="VIF 无 p 值；|VIF|>10 视为强共线性",
+        note_zh="VIF has no p-value; > 10 is treated as strong collinearity",
         note_en="VIF has no p-value; > 10 is treated as strong collinearity",
         extra={"vif": values, "worst": worst[0]},
     )
@@ -1294,7 +1294,7 @@ def hosmer_lemeshow(y_true: Sequence[float], proba: Sequence[float], groups: int
     mask = np.isfinite(y) & np.isfinite(p_hat)
     y, p_hat = y[mask], p_hat[mask]
     if len(y) < 50:
-        return _skipped("hosmer_lemeshow", "样本不足 50", "fewer than 50 observations", len(y))
+        return _skipped("hosmer_lemeshow", "fewer than 50 observations", "fewer than 50 observations", len(y))
     order = np.argsort(p_hat)
     y_sorted, p_sorted = y[order], p_hat[order]
     bins = np.array_split(np.arange(len(y_sorted)), groups)
@@ -1335,7 +1335,7 @@ def permutation_test(
     n = min(len(arr), len(g))
     arr, g = arr[:n], g[:n]
     if n < 20 or len(np.unique(g)) < 2:
-        return _skipped("permutation", "样本不足或只有一组", "too few observations or a single group", n)
+        return _skipped("permutation", "too few observations or a single group", "too few observations or a single group", n)
     obs = float(arr[g == 1].mean() - arr[g == 0].mean())
     rng = np.random.default_rng(seed)
     null = np.empty(n_iter)
@@ -1358,14 +1358,14 @@ def bootstrap_ci(
 ) -> Dict[str, Any]:
     a, b = _clean(control), _clean(treatment)
     if len(a) < 5 or len(b) < 5:
-        return _skipped("bootstrap", "每组至少需要 5 个观测", "each group needs at least 5 observations", len(a) + len(b))
+        return _skipped("bootstrap", "each group needs at least 5 observations", "each group needs at least 5 observations", len(a) + len(b))
     res = inf.bootstrap_diff_in_means(a, b, n_boot=n_boot, alpha=alpha, seed=seed)
     low, high = res["ci_abs"]
     p = res["p_value"]
     out = _result("bootstrap", res["abs_diff"], p, n=len(a) + len(b), alpha=alpha, extra={"ci": (low, high)})
     out["conclusion_zh"] = (
-        f"95% 百分位区间 [{low:+.4g}, {high:+.4g}] "
-        + ("不含 0，效应方向确定" if low > 0 or high < 0 else "含 0，方向尚未确定")
+        f"95% percentile interval [{low:+.4g}, {high:+.4g}] "
+        + ("excludes 0, direction is determined" if low > 0 or high < 0 else "contains 0, direction undetermined")
     )
     out["conclusion_en"] = (
         f"95% percentile interval [{low:+.4g}, {high:+.4g}] "
@@ -1377,11 +1377,11 @@ def bootstrap_ci(
 def tost(a: Sequence[float], b: Sequence[float], margin: float, alpha: float = 0.05) -> Dict[str, Any]:
     x, y = _clean(a), _clean(b)
     if len(x) < 5 or len(y) < 5 or margin <= 0:
-        return _skipped("tost", "样本不足或等效界未设定", "too few observations or a non-positive margin")
+        return _skipped("tost", "too few observations or a non-positive margin", "too few observations or a non-positive margin")
     diff = float(y.mean() - x.mean())
     se = float(np.sqrt(x.var(ddof=1) / len(x) + y.var(ddof=1) / len(y)))
     if se <= 0:
-        return _skipped("tost", "标准误为 0", "zero standard error")
+        return _skipped("tost", "zero standard error", "zero standard error")
     df = len(x) + len(y) - 2
     t_low = (diff + margin) / se
     t_high = (diff - margin) / se
@@ -1427,7 +1427,7 @@ def to_frame(tests: Sequence[Dict[str, Any]], lang: str = "zh", include_h0: bool
             ]
         )
     columns = (
-        ["检验", "统计量", "p", "结论", "参考"] if zh else ["test", "statistic", "p", "conclusion", "reference"]
+        ["test", "statistic", "p", "conclusion", "reference"] if zh else ["test", "statistic", "p", "conclusion", "reference"]
     )
     return pd.DataFrame(rows, columns=columns)
 
@@ -1449,22 +1449,22 @@ def summary_line(tests: Sequence[Dict[str, Any]], lang: str = "zh", max_items: i
     ran = [t for t in tests if t["status"] == "ok"]
     skipped = [t for t in tests if t["status"] == "skipped"]
     if not ran:
-        return "统计检验未执行（样本或数据不足）。" if zh else "No statistical test could run (insufficient data)."
+        return "No statistical test could run (insufficient data)." if zh else "No statistical test could run (insufficient data)."
     parts = []
     for t in ran[:max_items]:
         name = t["name_zh"] if zh else t["name_en"]
-        parts.append(f"{name}（{_fmt_stat(t)}，{_p_phrase(t['p_value'])}）→ {'拒绝' if t['decision'] == 'reject' else '不拒绝'} H0")
+        parts.append(f"{name} ({_fmt_stat(t)}, {_p_phrase(t['p_value'])}) -> {'reject' if t['decision'] == 'reject' else 'retain'} H0")
     head = (
-        f"本次结论附 {len(ran)} 项检验：" if zh else f"{len(ran)} tests accompany this conclusion: "
+        f"{len(ran)} tests accompany this conclusion: " if zh else f"{len(ran)} tests accompany this conclusion: "
     )
     tail = ""
     if skipped:
         tail = (
-            f"；另有 {len(skipped)} 项未执行（{skipped[0]['name_zh'] if zh else skipped[0]['name_en']} 等）"
+            f"; {len(skipped)} skipped ({skipped[0]['name_zh'] if zh else skipped[0]['name_en']} etc.)"
             if zh
             else f"; {len(skipped)} skipped ({skipped[0]['name_en']} etc.)"
         )
-    return head + "；".join(parts) + tail + ("。" if zh else ".")
+    return head + "; ".join(parts) + tail + "."
 
 
 def agreement(tests: Sequence[Dict[str, Any]], keys: Sequence[str]) -> Optional[bool]:

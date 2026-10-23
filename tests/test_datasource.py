@@ -112,7 +112,7 @@ def test_agent_drop_source(setup):
     agent, reg, csv, _ = setup
     reg.register_file("sales_extra", str(csv))
     reply = agent.ask("移除数据源 sales_extra")
-    assert "已移除" in reply.text
+    assert "removed" in reply.text
     assert [s["name"] for s in reg.list()] == []
 
 
@@ -120,4 +120,4 @@ def test_agent_lists_empty_state(setup):
     agent, _, _, _ = setup
     reply = agent.ask("数据源列表")
     assert reply.data["intent"] == "datasource"
-    assert "还没有" in reply.text
+    assert "No external sources attached yet" in reply.text

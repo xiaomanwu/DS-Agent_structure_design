@@ -126,8 +126,8 @@ def dowhy_refutations(result: Dict[str, Any], num_simulations: int = 20) -> List
     est = result["_estimate"]
     out: List[Dict[str, Any]] = []
     for name, key in (
-        ("安慰剂处理（伪处理）", "placebo_treatment_refuter"),
-        ("随机共同原因", "random_common_cause"),
+        ("Placebo treatment (pseudo-treatment)", "placebo_treatment_refuter"),
+        ("Random common cause", "random_common_cause"),
     ):
         try:
             ref = model.refute_estimate(estimand, est, method_name=key, num_simulations=num_simulations)
@@ -197,10 +197,10 @@ def oss_confidence(
     p = float(oss.get("p_value", float("nan")))
     checks.append(
         {
-            "name_zh": "开源引擎显著性",
+            "name_zh": "OSS engine significance",
             "name_en": "OSS engine significance",
             "status": PASS if p == p and p < 0.05 else WARN,
-            "detail_zh": f"DoWhy {oss['method']} 估计 {oss_est:.4f}，p={p:.4f}",
+            "detail_zh": f"DoWhy {oss['method']} estimate {oss_est:.4f}, p={p:.4f}",
             "detail_en": f"DoWhy {oss['method']} estimate {oss_est:.4f}, p={p:.4f}",
         }
     )
@@ -209,10 +209,10 @@ def oss_confidence(
     if placebo is not None and placebo["passed"] is not None:
         checks.append(
             {
-                "name_zh": "安慰剂处理反驳",
+                "name_zh": "placebo-treatment refutation",
                 "name_en": "placebo-treatment refutation",
                 "status": PASS if placebo["passed"] else FAIL,
-                "detail_zh": f"伪处理下新效应 {placebo['new_effect']:.4f}（应≈0）",
+                "detail_zh": f"effect under placebo treatment {placebo['new_effect']:.4f} (should be ~0)",
                 "detail_en": f"effect under placebo treatment {placebo['new_effect']:.4f} (should be ~0)",
             }
         )
@@ -220,10 +220,10 @@ def oss_confidence(
     if rcc is not None and rcc["passed"] is not None:
         checks.append(
             {
-                "name_zh": "随机共同原因反驳",
+                "name_zh": "random-common-cause refutation",
                 "name_en": "random-common-cause refutation",
                 "status": PASS if rcc["passed"] else WARN,
-                "detail_zh": f"加入伪混杂后新效应 {rcc['new_effect']:.4f}（应基本不变）",
+                "detail_zh": f"effect after adding a fake confounder {rcc['new_effect']:.4f} (should barely move)",
                 "detail_en": f"effect after adding a fake confounder {rcc['new_effect']:.4f} (should barely move)",
             }
         )
@@ -235,10 +235,10 @@ def oss_confidence(
             gap = abs(oss_est - ih) / max(abs(ih), 1e-9)
             checks.append(
                 {
-                    "name_zh": "跨引擎一致性",
+                    "name_zh": "cross-engine agreement",
                     "name_en": "cross-engine agreement",
                     "status": PASS if gap < 0.20 else (WARN if gap < 0.50 else FAIL),
-                    "detail_zh": f"自研估计 {ih:.4f} vs DoWhy {oss_est:.4f}，相对差 {gap:.0%}",
+                    "detail_zh": f"in-house {ih:.4f} vs DoWhy {oss_est:.4f}, relative gap {gap:.0%}",
                     "detail_en": f"in-house {ih:.4f} vs DoWhy {oss_est:.4f}, relative gap {gap:.0%}",
                 }
             )
@@ -246,9 +246,9 @@ def oss_confidence(
     n_fail = sum(1 for c in checks if c["status"] == FAIL)
     score = sum(1 for c in checks if c["status"] == PASS) / max(1, len(checks))
     if n_fail:
-        verdict = {"label_zh": "低置信", "label_en": "low confidence", "score": score, "n_fail": n_fail}
+        verdict = {"label_zh": "low confidence", "label_en": "low confidence", "score": score, "n_fail": n_fail}
     elif score >= 0.8:
-        verdict = {"label_zh": "高置信", "label_en": "high confidence", "score": score, "n_fail": n_fail}
+        verdict = {"label_zh": "high confidence", "label_en": "high confidence", "score": score, "n_fail": n_fail}
     else:
-        verdict = {"label_zh": "中置信", "label_en": "medium confidence", "score": score, "n_fail": n_fail}
+        verdict = {"label_zh": "medium confidence", "label_en": "medium confidence", "score": score, "n_fail": n_fail}
     return {"checks": checks, "verdict": verdict, "score": score, "gap": gap}

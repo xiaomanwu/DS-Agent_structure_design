@@ -8,7 +8,7 @@ across prose:
 - a list of named checks (``PASS`` / ``WARN`` / ``FAIL``) tailored to the
   analysis kind — significance, SRM, parallel trends, placebo permutation,
   specification agreement, outlier dependence, model agreement, ...
-- an overall verdict (高置信 / 中等置信 / 低置信) derived from the checks;
+- an overall verdict (high / medium / low confidence) derived from the checks;
 - the data for a dedicated validation chart, so the confidence story ships
   with the answer rather than living in a log.
 
@@ -54,11 +54,11 @@ def verdict(checks: Sequence[Dict[str, str]]) -> Dict[str, object]:
     n_fail = sum(1 for c in checks if c["status"] == FAIL)
     score = n_pass / n
     if n_fail:
-        label_zh, label_en = "低置信", "low confidence"
+        label_zh, label_en = "low confidence", "low confidence"
     elif score >= 0.8:
-        label_zh, label_en = "高置信", "high confidence"
+        label_zh, label_en = "high confidence", "high confidence"
     else:
-        label_zh, label_en = "中等置信", "medium confidence"
+        label_zh, label_en = "medium confidence", "medium confidence"
     return {"score": round(score, 3), "n_fail": n_fail, "label_zh": label_zh, "label_en": label_en}
 
 
@@ -74,12 +74,12 @@ def confidence_table(checks: Sequence[Dict[str, str]], lang: str, verdict_info: 
                 c["detail_zh"] if zh else c["detail_en"],
             ]
         )
-    df = pd.DataFrame(rows, columns=["检查项" if zh else "check", "结果" if zh else "result", "说明" if zh else "detail"])
+    df = pd.DataFrame(rows, columns=["check", "result", "detail"])
     if verdict_info:
         df.loc[len(df)] = [
-            "总体结论" if zh else "overall",
+            "overall",
             verdict_info["label_zh"] if zh else verdict_info["label_en"],
-            f"通过率 {verdict_info['score']:.0%}" if zh else f"{verdict_info['score']:.0%} checks passed",
+            f"{verdict_info['score']:.0%} checks passed",
         ]
     return df
 
@@ -87,7 +87,7 @@ def confidence_table(checks: Sequence[Dict[str, str]], lang: str, verdict_info: 
 def verdict_line(verdict_info: Dict[str, object], lang: str) -> str:
     zh = lang != "en"
     if zh:
-        return f"**置信度验证**：通过率 {verdict_info['score']:.0%} → **{verdict_info['label_zh']}**。"
+        return f"**Confidence validation**: {verdict_info['score']:.0%} of checks passed -> **{verdict_info['label_zh']}**."
     return f"**Confidence validation**: {verdict_info['score']:.0%} of checks passed -> **{verdict_info['label_en']}**."
 
 
@@ -134,28 +134,28 @@ def anomaly_confidence(
         ok = p < _THRESHOLD
         checks.append(
             check(
-                "窗口显著性", "window significance",
+                "window significance", "window significance",
                 PASS if ok else FAIL,
-                f"相对季节性基线 p={p:.4f}（{'显著' if ok else '不显著'}）",
+                f"p={p:.4f} vs the seasonal baseline ({'significant' if ok else 'not significant'})",
                 f"p={p:.4f} vs the seasonal baseline ({'significant' if ok else 'not significant'})",
             )
         )
     else:
-        checks.append(check("窗口显著性", "window significance", WARN, "基线期望缺失，无法检验", "no model expectation to test against"))
+        checks.append(check("window significance", "window significance", WARN, "no model expectation to test against", "no model expectation to test against"))
 
     # 2. Baseline quality: a bad MASE produces confident nonsense.
     if chosen_method and mase is not None:
         ok = mase < 1.0
         checks.append(
             check(
-                "基线质量", "baseline quality",
+                "baseline quality", "baseline quality",
                 PASS if ok else WARN,
-                f"{chosen_method} 滚动回测 MASE={mase:.3f}（{'优于季节朴素' if ok else '劣于季节朴素，预期不可全信'}）",
+                f"{chosen_method} rolling MASE={mase:.3f} ({'better than seasonal naive' if ok else 'worse than seasonal naive, treat expectations with caution'})",
                 f"{chosen_method} rolling MASE={mase:.3f} ({'better than seasonal naive' if ok else 'worse than seasonal naive'})",
             )
         )
     else:
-        checks.append(check("基线质量", "baseline quality", WARN, "使用 trailing 窗口基线，未做模型回测", "trailing baseline, no backtest"))
+        checks.append(check("baseline quality", "baseline quality", WARN, "trailing baseline, no backtest", "trailing baseline, no backtest"))
 
     # 3. Persistence: a level shift that lasts is not a one-day blip.
     if episodes:
@@ -164,18 +164,18 @@ def anomaly_confidence(
         ok = days >= 3
         checks.append(
             check(
-                "持续性", "persistence",
+                "persistence", "persistence",
                 PASS if ok else WARN,
-                f"最大异常区间持续 {days} 天（{'持续位移' if ok else '疑似单日噪声'}）",
+                f"largest episode lasts {days} day(s) ({'sustained shift' if ok else 'possibly one-day noise'})",
                 f"largest episode lasts {days} day(s) ({'sustained shift' if ok else 'possibly one-day noise'})",
             )
         )
     else:
-        checks.append(check("持续性", "persistence", WARN, "未检出异常区间", "no episodes detected"))
+        checks.append(check("persistence", "persistence", WARN, "no episodes detected", "no episodes detected"))
 
     # 4. Leave-one-out: does the shift survive without its worst day?
     loo_status = WARN
-    loo_detail_zh = "样本不足，跳过"
+    loo_detail_zh = "skipped: not enough points"
     loo_detail_en = "skipped: not enough points"
     if len(window_values) >= 5 and np.isfinite(window_expected).all():
         resid = np.abs(window_values - window_expected)
@@ -185,25 +185,25 @@ def anomaly_confidence(
             before = sps.ttest_rel(window_values, window_expected).pvalue
             after = sps.ttest_rel(window_values[keep], window_expected[keep]).pvalue
             loo_status = PASS if after < _THRESHOLD else FAIL
-            loo_detail_zh = f"去掉最极端一天后 p={after:.4f}（全窗口 p={before:.4f}）"
+            loo_detail_zh = f"p={after:.4f} after dropping the most extreme day (full window p={before:.4f})"
             loo_detail_en = f"p={after:.4f} after dropping the most extreme day (full window p={before:.4f})"
         except ValueError:
             pass
-    checks.append(check("极端值依赖（留一）", "outlier dependence (leave-one-out)", loo_status, loo_detail_zh, loo_detail_en))
+    checks.append(check("outlier dependence (leave-one-out)", "outlier dependence (leave-one-out)", loo_status, loo_detail_zh, loo_detail_en))
 
     # 5. Segment agreement: the segment scan should point the same way.
     if scan_top and scan_top.get("window_change") is not None:
         same = (scan_top["window_change"] > 0) == (total_delta > 0)
         checks.append(
             check(
-                "分段一致性", "segment agreement",
+                "segment agreement", "segment agreement",
                 PASS if same else WARN,
-                f"最异常分段方向与总体{'一致' if same else '相反'}（分段 {scan_top['window_change']:+.1%} vs 总体）",
+                f"worst segment direction {'agrees' if same else 'disagrees'} with the topline ({scan_top['window_change']:+.1%} vs overall)",
                 f"worst segment direction {'agrees' if same else 'disagrees'} with the topline ({scan_top['window_change']:+.1%} vs overall)",
             )
         )
     else:
-        checks.append(check("分段一致性", "segment agreement", WARN, "分段扫描无结果", "no segment-scan result"))
+        checks.append(check("segment agreement", "segment agreement", WARN, "no segment-scan result", "no segment-scan result"))
 
     v = verdict(checks)
     return {"checks": checks, "verdict": v}
@@ -252,9 +252,9 @@ def experiment_confidence(
     srm_ok = bool(srm["passed"])
     checks.append(
         check(
-            "SRM 分流比检查", "SRM (sample-ratio mismatch)",
+            "SRM (sample-ratio mismatch)", "SRM (sample-ratio mismatch)",
             PASS if srm_ok else FAIL,
-            f"{srm['message']}（p={srm['p_value']:.3f}）",
+            f"{srm['message']} (p={srm['p_value']:.3f})",
             f"{srm['message']} (p={srm['p_value']:.3f})",
         )
     )
@@ -262,9 +262,10 @@ def experiment_confidence(
     prim_ok = bool(primary["significant_adjusted"])
     checks.append(
         check(
-            "主指标显著性（BH 校正后）", "primary significance (BH-adjusted)",
+            "primary significance (BH-adjusted)", "primary significance (BH-adjusted)",
             PASS if prim_ok else WARN,
-            f"p={primary['p_value']:.4f}，校正后 p={primary['p_adjusted']:.4f}，CI 不含 0: {primary['ci_abs'][0] > 0 or primary['ci_abs'][1] < 0}",
+            f"p={primary['p_value']:.4f}, adjusted p={primary['p_adjusted']:.4f}, CI excludes 0: "
+            f"{primary['ci_abs'][0] > 0 or primary['ci_abs'][1] < 0}",
             f"p={primary['p_value']:.4f}, adjusted p={primary['p_adjusted']:.4f}, CI excludes 0: "
             f"{primary['ci_abs'][0] > 0 or primary['ci_abs'][1] < 0}",
         )
@@ -277,18 +278,18 @@ def experiment_confidence(
         gap = abs(perm["p_perm"] - float(primary["p_value"]))
         checks.append(
             check(
-                "置换检验交叉验证", "permutation cross-check",
+                "permutation cross-check", "permutation cross-check",
                 PASS if agree and gap < 0.03 else WARN,
-                f"重排 p={perm['p_perm']:.4f} vs 解析 p={primary['p_value']:.4f}（{'结论一致' if agree else '结论不一致，需警惕'}）",
+                f"permutation p={perm['p_perm']:.4f} vs analytic p={primary['p_value']:.4f} ({'agrees' if agree else 'disagrees'})",
                 f"permutation p={perm['p_perm']:.4f} vs analytic p={primary['p_value']:.4f} ({'agrees' if agree else 'disagrees'})",
             )
         )
     else:
         checks.append(
             check(
-                "置换检验交叉验证", "permutation cross-check",
+                "permutation cross-check", "permutation cross-check",
                 WARN,
-                "比率类指标未做置换检验（重排会改变估计对象）",
+                "skipped for ratio metrics (permutation would change the estimand)",
                 "skipped for ratio metrics (permutation would change the estimand)",
             )
         )
@@ -297,9 +298,9 @@ def experiment_confidence(
         same_sign = (cuped["rel_lift"] > 0) == (primary["rel_lift"] > 0)
         checks.append(
             check(
-                "CUPED 方向一致", "CUPED direction agreement",
+                "CUPED direction agreement", "CUPED direction agreement",
                 PASS if same_sign else WARN,
-                f"校正后 {cuped['rel_lift']:+.2%} vs 校正前 {primary['rel_lift']:+.2%}（方差缩减 {cuped['variance_reduction']:.0%}）",
+                f"adjusted {cuped['rel_lift']:+.2%} vs raw {primary['rel_lift']:+.2%} (variance cut {cuped['variance_reduction']:.0%})",
                 f"adjusted {cuped['rel_lift']:+.2%} vs raw {primary['rel_lift']:+.2%} (variance cut {cuped['variance_reduction']:.0%})",
             )
         )
@@ -307,9 +308,10 @@ def experiment_confidence(
     risky = [s for s in segments if s["rel_lift"] * primary["rel_lift"] < 0 and s["p_value"] < 0.05]
     checks.append(
         check(
-            "分群无反向显著", "no adverse significant segment",
+            "no adverse significant segment", "no adverse significant segment",
             PASS if not risky else WARN,
-            "无反向且显著的分群" if not risky else "存在反向显著分群: " + ", ".join(str(s["segment"]) for s in risky[:3]),
+            "no significant adverse segment" if not risky
+            else "significant adverse segments: " + ", ".join(str(s["segment"]) for s in risky[:3]),
             "no significant adverse segment" if not risky
             else "significant adverse segments: " + ", ".join(str(s["segment"]) for s in risky[:3]),
         )
@@ -362,9 +364,9 @@ def did_confidence(
     pre_ok = bool(es["parallel_trends_ok"])
     checks.append(
         check(
-            "平行趋势（前置期联合检验）", "parallel trends (joint pre-trend)",
+            "parallel trends (joint pre-trend)", "parallel trends (joint pre-trend)",
             PASS if pre_ok else FAIL,
-            f"前置期系数联合检验 p={es['pre_trend_joint_p']:.3f}",
+            f"joint test on pre-period leads p={es['pre_trend_joint_p']:.3f}",
             f"joint test on pre-period leads p={es['pre_trend_joint_p']:.3f}",
         )
     )
@@ -374,9 +376,9 @@ def did_confidence(
         max_abs_t = max(abs(c["coef"]) / c["se"] for c in pre_coefs if c["se"] > 0)
         checks.append(
             check(
-                "前置期系数均不显著", "no significant pre-period lead",
+                "no significant pre-period lead", "no significant pre-period lead",
                 PASS if max_abs_t < 2.0 else WARN,
-                f"最大 |t|={max_abs_t:.2f}（阈值 2.0）",
+                f"max |t|={max_abs_t:.2f} (threshold 2.0)",
                 f"max |t|={max_abs_t:.2f} (threshold 2.0)",
             )
         )
@@ -386,9 +388,9 @@ def did_confidence(
         tail = float(np.mean(np.abs(eff) >= abs(did["att"])))
         checks.append(
             check(
-                "安慰剂检验（假处理城市）", "in-space placebo (fake treated cities)",
+                "in-space placebo (fake treated cities)", "in-space placebo (fake treated cities)",
                 PASS if tail <= 0.05 else (WARN if tail <= 0.15 else FAIL),
-                f"实际 ATT 超过 {tail:.0%} 的安慰剂效应（n={placebo['n']}）",
+                f"real ATT exceeds {tail:.0%} of placebo effects (n={placebo['n']})",
                 f"real ATT exceeds {tail:.0%} of placebo effects (n={placebo['n']})",
             )
         )
@@ -396,9 +398,10 @@ def did_confidence(
     same_sign = (did["att"] > 0) == (did_log["relative_effect"] > 0)
     checks.append(
         check(
-            "口径稳健（level vs log）", "specification robustness (level vs log)",
+            "specification robustness (level vs log)", "specification robustness (level vs log)",
             PASS if same_sign else WARN,
-            f"level ATT {did['att']:+.4g} 与 log 相对效应 {did_log['relative_effect']:+.2%} {'同号' if same_sign else '异号'}",
+            f"level ATT {did['att']:+.4g} and log relative {did_log['relative_effect']:+.2%} "
+            f"{'agree' if same_sign else 'disagree'} in sign",
             f"level ATT {did['att']:+.4g} and log relative {did_log['relative_effect']:+.2%} "
             f"{'agree' if same_sign else 'disagree'} in sign",
         )
@@ -406,9 +409,9 @@ def did_confidence(
 
     checks.append(
         check(
-            "处理组覆盖", "treated-cluster coverage",
+            "treated-cluster coverage", "treated-cluster coverage",
             PASS if n_treated_units >= 3 else WARN,
-            f"{n_treated_units} 个处理城市（{'集群推断有效' if n_treated_units >= 3 else '集群过少，推断偏乐观'}）",
+            f"{n_treated_units} treated cities ({'cluster inference sound' if n_treated_units >= 3 else 'few clusters, CIs optimistic'})",
             f"{n_treated_units} treated cities ({'cluster inference sound' if n_treated_units >= 3 else 'few clusters, CIs optimistic'})",
         )
     )
@@ -433,9 +436,9 @@ def matching_confidence(
         worst = max(b["smd_after"] for b in balance)
         checks.append(
             check(
-                "匹配后协变量平衡", "post-match covariate balance",
+                "post-match covariate balance", "post-match covariate balance",
                 PASS if worst < 0.1 else (WARN if worst < 0.2 else FAIL),
-                f"匹配后最大 SMD={worst:.3f}（阈值 0.1）",
+                f"max post-match SMD={worst:.3f} (threshold 0.1)",
                 f"max post-match SMD={worst:.3f} (threshold 0.1)",
             )
         )
@@ -445,9 +448,9 @@ def matching_confidence(
         share = float(support.get("share_outside", 0.0))
         checks.append(
             check(
-                "共同支撑 / 重叠性", "common support / overlap",
+                "common support / overlap", "common support / overlap",
                 PASS if share < 0.05 else (WARN if share < 0.15 else FAIL),
-                f"{share:.1%} 的处理组落在共同支撑外",
+                f"{share:.1%} of treated units fall outside common support",
                 f"{share:.1%} of treated units fall outside common support",
             )
         )
@@ -458,9 +461,9 @@ def matching_confidence(
         gap = abs(psm_att - aipw_est) / max(abs(aipw_est), 1e-9)
         checks.append(
             check(
-                "方法一致性（PSM vs AIPW）", "estimator agreement (PSM vs AIPW)",
+                "estimator agreement (PSM vs AIPW)", "estimator agreement (PSM vs AIPW)",
                 PASS if gap < 0.3 else WARN,
-                f"PSM ATT {psm_att:+.4g} vs AIPW ATE {aipw_est:+.4g}（差 {gap:.0%}）",
+                f"PSM ATT {psm_att:+.4g} vs AIPW ATE {aipw_est:+.4g} ({gap:.0%} apart)",
                 f"PSM ATT {psm_att:+.4g} vs AIPW ATE {aipw_est:+.4g} ({gap:.0%} apart)",
             )
         )
@@ -469,7 +472,7 @@ def matching_confidence(
         p = float(psm["p_value"])
         checks.append(
             check(
-                "PSM 显著性", "PSM significance",
+                "PSM significance", "PSM significance",
                 PASS if p < _THRESHOLD else WARN,
                 f"p={p:.4f}",
                 f"p={p:.4f}",
@@ -478,9 +481,9 @@ def matching_confidence(
 
     checks.append(
         check(
-            "隐性混淆提示", "hidden-confounding caveat",
+            "hidden-confounding caveat", "hidden-confounding caveat",
             WARN,
-            "匹配只能平衡已观测协变量，需配合敏感性分析",
+            "matching balances observed covariates only; pair with a sensitivity pass",
             "matching balances observed covariates only; pair with a sensitivity pass",
         )
     )
@@ -499,9 +502,9 @@ def ts_causal_confidence(its: Dict[str, object], impact: Dict[str, object], agre
     lb = float(its["ljung_box_p"])
     checks.append(
         check(
-            "ITS 残差白噪声", "ITS residual whiteness",
+            "ITS residual whiteness", "ITS residual whiteness",
             PASS if lb > 0.05 else WARN,
-            f"Ljung-Box p={lb:.3f}（残差{'无' if lb > 0.05 else '有'}自相关）",
+            f"Ljung-Box p={lb:.3f} (residuals {'white' if lb > 0.05 else 'autocorrelated'})",
             f"Ljung-Box p={lb:.3f} (residuals {'white' if lb > 0.05 else 'autocorrelated'})",
         )
     )
@@ -511,18 +514,18 @@ def ts_causal_confidence(its: Dict[str, object], impact: Dict[str, object], agre
     ok = p1 > 0.10 and p2 > 0.10
     checks.append(
         check(
-            "安慰剂检验（假干预日）", "placebo intervention dates",
+            "placebo intervention dates", "placebo intervention dates",
             PASS if ok else (WARN if min(p1, p2) > 0.05 else FAIL),
-            f"ITS p={p1:.3f}，结构模型 p={p2:.3f}（均应 >0.10）",
+            f"ITS p={p1:.3f}, structural p={p2:.3f} (both should exceed 0.10)",
             f"ITS p={p1:.3f}, structural p={p2:.3f} (both should exceed 0.10)",
         )
     )
 
     checks.append(
         check(
-            "双模型一致性", "two-model agreement",
+            "two-model agreement", "two-model agreement",
             PASS if agree else WARN,
-            f"ITS {its['relative']:+.2%} vs 结构模型 {impact['relative']:+.2%}",
+            f"ITS {its['relative']:+.2%} vs structural {impact['relative']:+.2%}",
             f"ITS {its['relative']:+.2%} vs structural {impact['relative']:+.2%}",
         )
     )
@@ -530,9 +533,9 @@ def ts_causal_confidence(its: Dict[str, object], impact: Dict[str, object], agre
     r2 = float(impact.get("pre_fit_r2", 0.0))
     checks.append(
         check(
-            "反事实拟合质量", "counterfactual fit quality",
+            "counterfactual fit quality", "counterfactual fit quality",
             PASS if r2 >= 0.7 else WARN,
-            f"干预前一步拟合 R²={r2:.3f}",
+            f"pre-period one-step fit R2={r2:.3f}",
             f"pre-period one-step fit R2={r2:.3f}",
         )
     )
@@ -543,9 +546,9 @@ def ts_causal_confidence(its: Dict[str, object], impact: Dict[str, object], agre
         sig_all = bool((spec["p_value"] < _THRESHOLD).all())
         checks.append(
             check(
-                "口径曲线稳健", "specification-curve robustness",
+                "specification-curve robustness", "specification-curve robustness",
                 PASS if same and sig_all else WARN,
-                f"{'全部同号且显著' if same and sig_all else '存在异号或不显著的口径'}（{len(spec)} 个设定）",
+                f"{'all same sign and significant' if same and sig_all else 'mixed signs or insignificant specs'} ({len(spec)} specs)",
                 f"{'all same sign and significant' if same and sig_all else 'mixed signs or insignificant specs'} ({len(spec)} specs)",
             )
         )

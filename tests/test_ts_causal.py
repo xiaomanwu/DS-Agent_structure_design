@@ -188,7 +188,7 @@ def test_causal_impact_uses_controls_and_says_so(impact):
     assert impact["n_controls"] == 2
     assert impact["scale"] == "log"
     assert not impact["stochastic_trend"], "a stochastic trend would absorb the level shift"
-    assert "控制序列" in impact["narrative"]
+    assert "with controls" in impact["narrative"]
 
 
 def test_causal_impact_without_controls_warns(series, impact):
@@ -196,8 +196,8 @@ def test_causal_impact_without_controls_warns(series, impact):
     assert bare["n_controls"] == 0
     # Unidentified without controls: the estimate is allowed to be worse, but the
     # narrative has to admit it rather than present it as equally credible.
-    assert "注意" in bare["narrative"]
-    assert "不可区分" in bare["narrative"]
+    assert "Caveat" in bare["narrative"]
+    assert "observationally equivalent" in bare["narrative"]
     assert abs(bare["relative"] - impact["relative"]) > 0.01
 
 

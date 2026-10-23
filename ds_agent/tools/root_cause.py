@@ -61,7 +61,7 @@ def root_cause_tree(
     into the few segments that carry the move; ``min_share`` ignores dimensions
     whose best segment explains less than that share of the node's change.
     ``value_labels`` maps dimension codes to readable labels (from the semantic
-    layer) so paths read ``is_new_user=新客`` instead of ``is_new_user=0.0``.
+    layer) so paths read ``is_new_user=new`` instead of ``is_new_user=0.0``.
     """
     if not dimensions:
         raise ValueError("at least one dimension is required")
@@ -220,10 +220,10 @@ def tree_table(tree: Dict[str, object], lang: str = "zh") -> pd.DataFrame:
     return pd.DataFrame(
         rows,
         columns=[
-            zh and "层级" or "depth",
-            zh and "下钻路径" or "drill-down path",
-            zh and "指标变化" or "metric change",
-            zh and "占总变动" or "share of root",
-            zh and "下钻维度" or "drill dimension",
+            zh and "depth" or "depth",
+            zh and "drill-down path" or "drill-down path",
+            zh and "metric change" or "metric change",
+            zh and "share of root" or "share of root",
+            zh and "drill dimension" or "drill dimension",
         ],
     )

@@ -294,13 +294,13 @@ def regression_discontinuity(
     relative = estimate / left["intercept"] if left["intercept"] else float("nan")
     narrative = _tr(
         lang,
-        f"断点回归（{'模糊' if fuzzy else '精确'}，带宽 {h:.4g}）：断点处跳跃 {jump:+.4g}"
-        f"（左 {left['intercept']:.4g} → 右 {right['intercept']:.4g}），"
-        + (f"一阶段跳跃 {first_stage['jump']:.3f}，" if first_stage else "")
-        + f"{'LATE' if fuzzy else '效应'} {estimate:+.4g}（相对 {relative:+.2%}，95% CI "
-        f"{estimate - crit * estimate_se:+.4g}..{estimate + crit * estimate_se:+.4g}，p={p_value:.4f}）；"
-        f"密度检验 p={density['p_value']:.3f}（{'未发现操纵' if density['p_value'] > 0.05 else '存在操纵风险'}），"
-        f"带宽敏感性{'稳定' if stable else '不稳定'}，协变量平衡{'通过' if balance_ok else '未通过'}。",
+        f"RDD ({'fuzzy' if fuzzy else 'sharp'}, bandwidth {h:.4g}): jump {jump:+.4g} "
+        f"(left {left['intercept']:.4g} -> right {right['intercept']:.4g}), "
+        + (f"first stage {first_stage['jump']:.3f}, " if first_stage else "")
+        + f"{'LATE' if fuzzy else 'effect'} {estimate:+.4g} ({relative:+.2%} relative, 95% CI "
+        f"{estimate - crit * estimate_se:+.4g}..{estimate + crit * estimate_se:+.4g}, p={p_value:.4f}); "
+        f"density test p={density['p_value']:.3f} ({'no manipulation detected' if density['p_value'] > 0.05 else 'manipulation risk'}), "
+        f"bandwidth sensitivity {'stable' if stable else 'unstable'}, covariate balance {'passes' if balance_ok else 'fails'}.",
         f"RDD ({'fuzzy' if fuzzy else 'sharp'}, bandwidth {h:.4g}): jump {jump:+.4g} "
         f"(left {left['intercept']:.4g} -> right {right['intercept']:.4g}), "
         + (f"first stage {first_stage['jump']:.3f}, " if first_stage else "")

@@ -26,8 +26,8 @@ from ..stats import power as pw
 EXPERIMENT_TYPES: Dict[str, Dict[str, object]] = {
     "ab": {
         "name_en": "Standard A/B test",
-        "name_zh": "标准 A/B 实验",
-        "when_zh": "单一改动、用户相互独立、流量充足时的默认选择。",
+        "name_zh": "Standard A/B test",
+        "when_zh": "One change, independent users, enough traffic. The default.",
         "when": "One change, independent users, enough traffic. The default.",
         "randomization_unit": "user_id",
         "analysis": "Two-proportion z-test or Welch t-test; CUPED when a pre-period covariate exists.",
@@ -35,8 +35,8 @@ EXPERIMENT_TYPES: Dict[str, Dict[str, object]] = {
     },
     "abn": {
         "name_en": "A/B/n (multi-arm)",
-        "name_zh": "多组实验 A/B/n",
-        "when_zh": "多个版本同场竞争，想从多者中选出赢家。",
+        "name_zh": "A/B/n (multi-arm)",
+        "when_zh": "Several variants compete; you want one winner among many.",
         "when": "Several variants compete; you want one winner among many.",
         "randomization_unit": "user_id",
         "analysis": "Omnibus test first (chi-square / ANOVA), then pairwise with BH or Holm correction.",
@@ -44,8 +44,8 @@ EXPERIMENT_TYPES: Dict[str, Dict[str, object]] = {
     },
     "factorial": {
         "name_en": "Factorial / multivariate",
-        "name_zh": "析因/多因素实验",
-        "when_zh": "两个及以上独立杠杆（如文案 x 价格标签）且关心交互效应。",
+        "name_zh": "Factorial / multivariate",
+        "when_zh": "Two or more independent levers (e.g. copy x price badge) and interaction matters.",
         "when": "Two or more independent levers (e.g. copy x price badge) and interaction matters.",
         "randomization_unit": "user_id",
         "analysis": "Two-way ANOVA or regression with interaction terms; report main effects and interaction.",
@@ -53,8 +53,8 @@ EXPERIMENT_TYPES: Dict[str, Dict[str, object]] = {
     },
     "stratified": {
         "name_en": "Stratified randomisation",
-        "name_zh": "分层随机",
-        "when_zh": "强协变量（设备、国家、新老客）导致分流不平衡风险高。",
+        "name_zh": "Stratified randomisation",
+        "when_zh": "Strong covariates (device, country, new/returning) create imbalance risk.",
         "when": "Strong covariates (device, country, new/returning) create imbalance risk.",
         "randomization_unit": "user_id within strata",
         "analysis": "Stratified t-test / regression with strata fixed effects; variance reduction 5-30%.",
@@ -62,8 +62,8 @@ EXPERIMENT_TYPES: Dict[str, Dict[str, object]] = {
     },
     "cluster": {
         "name_en": "Cluster / geo randomisation",
-        "name_zh": "聚类/地域随机",
-        "when_zh": "用户间存在干扰（社交、供需耦合）或改动只能整渠道生效。",
+        "name_zh": "Cluster / geo randomisation",
+        "when_zh": "Interference between users (social graph, supply-demand coupling) or a channel-level change.",
         "when": "Interference between users (social graph, supply-demand coupling) or a channel-level change.",
         "randomization_unit": "city / school / seller",
         "analysis": "Cluster-robust SE or delta method on cluster means; design effect 1+(m-1)*ICC.",
@@ -71,8 +71,8 @@ EXPERIMENT_TYPES: Dict[str, Dict[str, object]] = {
     },
     "switchback": {
         "name_en": "Switchback (time-based)",
-        "name_zh": "时间片轮转实验",
-        "when_zh": "双边市场（定价、派单）——单侧干预会污染另一侧。",
+        "name_zh": "Switchback (time-based)",
+        "when_zh": "Marketplace / two-sided platform where treating one side contaminates the other (pricing, dispatch).",
         "when": "Marketplace / two-sided platform where treating one side contaminates the other (pricing, dispatch).",
         "randomization_unit": "time block x market",
         "analysis": "Paired comparison across blocks with autocorrelation-robust SE (HAC / block bootstrap).",
@@ -80,8 +80,8 @@ EXPERIMENT_TYPES: Dict[str, Dict[str, object]] = {
     },
     "holdout": {
         "name_en": "Long-term holdout",
-        "name_zh": "长期保留组",
-        "when_zh": "改动全量上线后，衡量长期留存的净效应。",
+        "name_zh": "Long-term holdout",
+        "when_zh": "Measuring durable effects after the change is fully launched.",
         "when": "Measuring durable effects after the change is fully launched.",
         "randomization_unit": "user_id (small holdout %, e.g. 1-5%)",
         "analysis": "Repeated readouts vs holdout, cumulative effect curve, decay analysis.",
@@ -89,8 +89,8 @@ EXPERIMENT_TYPES: Dict[str, Dict[str, object]] = {
     },
     "bandit": {
         "name_en": "Multi-armed bandit",
-        "name_zh": "多臂老虎机",
-        "when_zh": "上线过程中就要优化收益，且不需要干净的 ATE。",
+        "name_zh": "Multi-armed bandit",
+        "when_zh": "Optimising a reward during rollout and losing traffic is expensive; you do not need a clean ATE.",
         "when": "Optimising a reward during rollout and losing traffic is expensive; you do not need a clean ATE.",
         "randomization_unit": "user_id / impression",
         "analysis": "Thompson sampling posterior comparison; do NOT report p-values from adaptively collected data.",
@@ -98,8 +98,8 @@ EXPERIMENT_TYPES: Dict[str, Dict[str, object]] = {
     },
     "sequential": {
         "name_en": "Sequential / always-valid test",
-        "name_zh": "序贯检验（随时看数）",
-        "when_zh": "业务方坚持每天看数，或需要为大赢家提前停止。",
+        "name_zh": "Sequential / always-valid test",
+        "when_zh": "Stakeholders insist on daily readouts, or stopping early for a big win matters.",
         "when": "Stakeholders insist on daily readouts, or stopping early for a big win matters.",
         "randomization_unit": "user_id",
         "analysis": "Alpha spending (O'Brien-Fleming) or mSPRT; never use the naive p < 0.05 rule repeatedly.",
@@ -107,8 +107,8 @@ EXPERIMENT_TYPES: Dict[str, Dict[str, object]] = {
     },
     "cuped": {
         "name_en": "CUPED variance reduction",
-        "name_zh": "CUPED 方差缩减",
-        "when_zh": "有强相关的实验前指标（登录用户基本都有）。",
+        "name_zh": "CUPED variance reduction",
+        "when_zh": "A correlated pre-period metric exists (always, for logged-in users).",
         "when": "A correlated pre-period metric exists (always, for logged-in users).",
         "randomization_unit": "user_id",
         "analysis": "Y_adj = Y - theta * (X - mean X); variance reduction equals corr(X, Y)^2.",
@@ -116,8 +116,8 @@ EXPERIMENT_TYPES: Dict[str, Dict[str, object]] = {
     },
     "triggered": {
         "name_en": "Triggered / activation analysis",
-        "name_zh": "触发式分析",
-        "when_zh": "只有部分用户可能被影响（如只对看到横幅的人）。",
+        "name_zh": "Triggered / activation analysis",
+        "when_zh": "Only a subset of users can possibly be affected (e.g. users who saw the banner).",
         "when": "Only a subset of users can possibly be affected (e.g. users who saw the banner).",
         "randomization_unit": "user_id (randomise all, analyse triggered)",
         "analysis": "Compare triggered users only; report both ITT and triggered-only effect.",
@@ -125,8 +125,8 @@ EXPERIMENT_TYPES: Dict[str, Dict[str, object]] = {
     },
     "quasi": {
         "name_en": "Quasi-experiment (DID / synthetic control)",
-        "name_zh": "准实验（DID/合成控制）",
-        "when_zh": "无法随机（政策、定价、竞对冲击）。",
+        "name_zh": "Quasi-experiment (DID / synthetic control)",
+        "when_zh": "Randomisation is impossible (policy change, pricing, competitor shock).",
         "when": "Randomisation is impossible (policy change, pricing, competitor shock).",
         "randomization_unit": "geo / entity",
         "analysis": "Difference-in-differences with parallel-trends test, or synthetic control with placebo tests.",
@@ -134,8 +134,8 @@ EXPERIMENT_TYPES: Dict[str, Dict[str, object]] = {
     },
     "nested": {
         "name_en": "Parent-child (nested / orthogonal layers)",
-        "name_zh": "父子实验（正交分层）",
-        "when_zh": "同一个入口同时跑多个实验（推荐流 x 排序策略），需要保证互不干扰。",
+        "name_zh": "Parent-child (nested / orthogonal layers)",
+        "when_zh": "Several experiments run on the same surface at once and must not contaminate each other.",
         "when": "Several experiments run on the same surface at once and must not contaminate each other.",
         "randomization_unit": "user_id within an orthogonal layer; parent arm fixed per user",
         "analysis": "Orthogonality check (chi-square on the parent x child crosstab), then child effect adjusted for parent fixed effects; report the interaction to prove there is none.",
@@ -147,8 +147,8 @@ EXPERIMENT_TYPES: Dict[str, Dict[str, object]] = {
     },
     "reversal": {
         "name_en": "Reversal (swap-back) experiment",
-        "name_zh": "反转实验",
-        "when_zh": "担心埋点漂移、新奇效应或长期趋势污染，需要在期中把两组体验对调。",
+        "name_zh": "Reversal (swap-back) experiment",
+        "when_zh": "You suspect instrumentation drift, novelty effects or a time trend, so the two arms swap experiences mid-flight.",
         "when": "You suspect instrumentation drift, novelty effects or a time trend, so the two arms swap experiences mid-flight.",
         "randomization_unit": "user_id, with an arm-to-experience swap at the midpoint",
         "analysis": "Estimate the effect in both phases; tau1 and tau2 should be equal and opposite. Their sum tests for drift, their ratio measures persistence.",
@@ -160,8 +160,8 @@ EXPERIMENT_TYPES: Dict[str, Dict[str, object]] = {
     },
     "two_sided": {
         "name_en": "Two-sided / marketplace 2x2",
-        "name_zh": "双边实验（2x2 双侧干预）",
-        "when_zh": "平台同时改买家侧和卖家侧（补贴、流量、定价），需要拆出直接效应与跨侧溢出。",
+        "name_zh": "Two-sided / marketplace 2x2",
+        "when_zh": "The platform changes both the demand and the supply side and you need direct effects plus cross-side spillovers.",
         "when": "The platform changes both the demand and the supply side and you need direct effects plus cross-side spillovers.",
         "randomization_unit": "market / city, crossed buyer-treatment x seller-treatment",
         "analysis": "2x2 cell means: direct effects from the marginals, cross-side spillover from the off-diagonal, interaction from the difference-in-differences of cells; cluster bootstrap on markets.",
@@ -346,47 +346,47 @@ def _analysis_plan(design: ExperimentDesign, sizing: Dict[str, float]) -> List[s
     plan = []
     if design.metric_kind == "proportion":
         plan.append(_tr(lang,
-            "主检验：两比例 z 检验，报告绝对/相对提升及 95% 置信区间。",
+            "Primary test: two-proportion z-test on the success rate; report absolute and relative lift with 95% CI.",
             "Primary test: two-proportion z-test on the success rate; report absolute and relative lift with 95% CI."))
     elif design.metric_kind == "mean":
         plan.append(_tr(lang,
-            "主检验：对每用户取值做 Welch t 检验；重尾分布时改用 bootstrap 置信区间。",
+            "Primary test: Welch t-test on per-user values; bootstrap CI if the distribution is heavy-tailed.",
             "Primary test: Welch t-test on per-user values; bootstrap CI if the distribution is heavy-tailed."))
         plan.append(_tr(lang,
-            "对收入类指标做过尾部缩尾（winsorize 0.1%），并同时报告缩尾前后结果。",
+            "Winsorise the top 0.1% of revenue outliers and report results with and without winsorisation.",
             "Winsorise the top 0.1% of revenue outliers and report results with and without winsorisation."))
     elif design.metric_kind == "count":
         plan.append(_tr(lang,
-            "主检验：每用户计数的准泊松回归（含分组指示变量）。",
+            "Primary test: quasi-Poisson regression of counts per user with a group indicator.",
             "Primary test: quasi-Poisson regression of counts per user with a group indicator."))
     else:
         plan.append(_tr(lang,
-            "主检验：对求和比（分子/分母）用 delta method 或 bootstrap 求置信区间。",
+            "Primary test: delta-method or bootstrap CI for the ratio of sums (numerator/denominator).",
             "Primary test: delta-method or bootstrap CI for the ratio of sums (numerator/denominator)."))
 
     plan.append(_tr(lang,
-        "读任何指标前先跑 SRM 检查；p < 0.001 时停止读指标并修分流/埋点。",
+        "Run an SRM check before any metric readout; if p < 0.001, stop and fix instrumentation.",
         "Run an SRM check before any metric readout; if p < 0.001, stop and fix instrumentation."))
     plan.append(_tr(lang,
-        "用实验前同口径指标做 CUPED，预期方差缩减 10%-50%。",
+        "Apply CUPED on a pre-period covariate of the same metric; expect 10-50% variance reduction.",
         "Apply CUPED on a pre-period covariate of the same metric; expect 10-50% variance reduction."))
     if design.experiment_type == "sequential":
         plan.append(_tr(lang,
-            "中期查看：O'Brien-Fleming alpha 消耗函数；若查看时点由数据决定，改用 mSPRT。",
+            "Interim looks: O'Brien-Fleming alpha spending, or mSPRT if looks are data-driven.",
             "Interim looks: O'Brien-Fleming alpha spending, or mSPRT if looks are data-driven."))
     if design.n_arms > 2:
         plan.append(_tr(lang,
-            f"多重比较：对 {design.n_arms - 1} 个处理臂与所有次级指标做 BH-FDR 校正。",
+            f"Multiple comparisons: BH-FDR across {design.n_arms - 1} treatment arms and all secondary metrics.",
             f"Multiple comparisons: BH-FDR across {design.n_arms - 1} treatment arms and all secondary metrics."))
     if design.experiment_type == "cluster":
         plan.append(_tr(lang,
-            "使用随机化单元做聚类稳健标准误（或分块 bootstrap）。",
+            "Cluster-robust standard errors (or block bootstrap) using the randomisation unit.",
             "Cluster-robust standard errors (or block bootstrap) using the randomisation unit."))
     plan.append(_tr(lang,
-        "上线前锁定 1 个主指标、≤5 个次级指标和护栏指标。",
+        "Pre-register one primary metric, <=5 secondary metrics and guardrails before launch.",
         "Pre-register one primary metric, <=5 secondary metrics and guardrails before launch."))
     plan.append(_tr(lang,
-        "首日 24 小时为数据爬坡期，建议剔除；按周检查新奇效应/首因效应。",
+        "Exclude the first 24h (logging ramp) and check novelty/primacy effects by week.",
         "Exclude the first 24h (logging ramp) and check novelty/primacy effects by week."))
     return plan
 
@@ -396,26 +396,26 @@ def _risks(design: ExperimentDesign) -> List[str]:
     risks = []
     if design.daily_traffic * design.allocation / (1 + design.allocation) < 200:
         risks.append(_tr(lang,
-            "每日每臂流量过低：考虑序贯检验或更便宜的代理指标。",
+            "Very low daily traffic per arm: consider sequential testing or a cheaper proxy metric.",
             "Very low daily traffic per arm: consider sequential testing or a cheaper proxy metric."))
     if design.mde_rel and design.mde_rel < 0.01:
         risks.append(_tr(lang,
-            "MDE 小于 1% 通常需要数周曝光，且对任何埋点漂移都极敏感。",
+            "Sub-1% MDE usually needs weeks of exposure and is sensitive to any instrumentation drift.",
             "Sub-1% MDE usually needs weeks of exposure and is sensitive to any instrumentation drift."))
     if design.metric_kind == "mean":
         risks.append(_tr(lang,
-            "金额型指标重尾：单个大客户就能主导结果，需提前确定截尾/封顶口径。",
+            "Heavy-tailed revenue metrics: one whale can dominate; plan a trimmed or capped readout.",
             "Heavy-tailed revenue metrics: one whale can dominate; plan a trimmed or capped readout."))
     if design.experiment_type in ("switchback", "cluster"):
         risks.append(_tr(lang,
-            "存在干扰/延续效应：需要 washout 窗口，并核对实验前各单元是否平衡。",
+            "Interference/carryover: define a washout window and verify pre-period balance.",
             "Interference/carryover: define a washout window and verify pre-period balance."))
     if design.experiment_type == "bandit":
         risks.append(_tr(lang,
-            "自适应分流会让固定样本量下的 p 值失效，应改用后验概率判断。",
+            "Adaptive allocation invalidates fixed-horizon p-values; use posterior probability instead.",
             "Adaptive allocation invalidates fixed-horizon p-values; use posterior probability instead."))
     risks.append(_tr(lang,
-        "埋点漂移是假赢家的头号来源：两臂必须走完全相同的打点路径。",
+        "Instrumentation drift is the most common cause of fake wins: log both arms with the same code path.",
         "Instrumentation drift is the most common cause of fake wins: log both arms with the same code path."))
     return risks
 
@@ -425,8 +425,9 @@ def _decision_rule(design: ExperimentDesign, sizing: Dict[str, float]) -> str:
     mde = design.mde_rel if design.mde_rel is not None else design.mde_abs
     if lang == "zh":
         return (
-            f"上线条件：主指标提升显著（α={sizing['alpha']:.3f}），置信区间下界高于 {mde}，"
-            "护栏指标无超阈回退，且效应方向在至少 2/3 的预注册分群里一致。"
+            f"Ship if the primary metric shows a statistically significant lift (alpha={sizing['alpha']:.3f}) "
+            f"with the CI excluding an effect smaller than {mde}, no guardrail regression beyond the agreed "
+            f"threshold, and the effect is consistent across at least two of three pre-registered segments."
         )
     return (
         f"Ship if the primary metric shows a statistically significant lift (alpha={sizing['alpha']:.3f}) "
@@ -446,29 +447,29 @@ def _design_markdown(
     lang = design.lang
     when = archetype.get("when_zh") if lang == "zh" else archetype.get("when")
     lines = [
-        f"## {_tr(lang, '实验设计', 'Experiment design')}: {design.goal or 'untitled'}",
+        f"## {_tr(lang, 'Experiment design', 'Experiment design')}: {design.goal or 'untitled'}",
         "",
-        f"**{_tr(lang, '实验类型', 'Archetype')}**: {archetype['name_zh']} / {archetype['name_en']}",
-        f"**{_tr(lang, '随机化单元', 'Randomisation unit')}**: {archetype['randomization_unit']}",
+        f"**{_tr(lang, 'Archetype', 'Archetype')}**: {archetype['name_zh']} / {archetype['name_en']}",
+        f"**{_tr(lang, 'Randomisation unit', 'Randomisation unit')}**: {archetype['randomization_unit']}",
         "",
-        f"### {_tr(lang, '样本量与时效', 'Sizing')}",
-        f"- {_tr(lang, '基线', 'Baseline')}: {sizing.get('control_rate', design.baseline):.4g}",
-        f"- {_tr(lang, '可检测效应', 'Detectable effect')}: "
+        f"### {_tr(lang, 'Sizing', 'Sizing')}",
+        f"- {_tr(lang, 'Baseline', 'Baseline')}: {sizing.get('control_rate', design.baseline):.4g}",
+        f"- {_tr(lang, 'Detectable effect', 'Detectable effect')}: "
         f"{design.mde_rel if design.mde_rel is not None else design.mde_abs} "
         f"({'relative' if design.mde_rel is not None else 'absolute'})",
-        f"- {_tr(lang, '每臂样本', 'Per arm')}: control {sizing['n_control']:,} / treatment {sizing['n_treatment']:,} "
-        f"({_tr(lang, '合计', 'total')} {sizing['n_total']:,})",
-        f"- {_tr(lang, '实际功效', 'Achieved power')}: {sizing.get('achieved_power', 0):.3f} @ alpha={sizing['alpha']}",
-        f"- {_tr(lang, '时长', 'Duration')}: ~{duration['raw_days']} {_tr(lang, '天', 'days')} "
-        f"({duration['recommended_days']} {_tr(lang, '天建议', 'days recommended')})",
+        f"- {_tr(lang, 'Per arm', 'Per arm')}: control {sizing['n_control']:,} / treatment {sizing['n_treatment']:,} "
+        f"({_tr(lang, 'total', 'total')} {sizing['n_total']:,})",
+        f"- {_tr(lang, 'Achieved power', 'Achieved power')}: {sizing.get('achieved_power', 0):.3f} @ alpha={sizing['alpha']}",
+        f"- {_tr(lang, 'Duration', 'Duration')}: ~{duration['raw_days']} {_tr(lang, 'days', 'days')} "
+        f"({duration['recommended_days']} {_tr(lang, 'days recommended', 'days recommended')})",
     ]
     if "cluster_design_effect" in sizing:
-        lines.append(f"- {_tr(lang, '聚类设计效应', 'Cluster design effect')}: {sizing['cluster_design_effect']['design_effect']:.2f}x")
-    lines += ["", f"### {_tr(lang, '分析方案', 'Analysis plan')}"] + [f"1. {p}" for p in analysis_plan]
-    lines += ["", f"### {_tr(lang, '护栏指标', 'Guardrails')}"] + [
+        lines.append(f"- {_tr(lang, 'Cluster design effect', 'Cluster design effect')}: {sizing['cluster_design_effect']['design_effect']:.2f}x")
+    lines += ["", f"### {_tr(lang, 'Analysis plan', 'Analysis plan')}"] + [f"1. {p}" for p in analysis_plan]
+    lines += ["", f"### {_tr(lang, 'Guardrails', 'Guardrails')}"] + [
         f"- {g}" for g in (design.guardrail_metrics or ["latency_p95", "crash_rate", "refund_rate"])
     ]
-    lines += ["", f"### {_tr(lang, '主要风险', 'Risks')}"] + [f"- {r}" for r in risks]
+    lines += ["", f"### {_tr(lang, 'Risks', 'Risks')}"] + [f"- {r}" for r in risks]
     if when:
         lines += ["", f"> {when}"]
     return "\n".join(lines)

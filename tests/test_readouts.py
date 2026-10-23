@@ -162,7 +162,7 @@ def test_advanced_sections_reach_the_report(local):
     reply = local.ask("把上面的分析写成周报")
     assert len(reply.artifacts) == 2
     html = open(reply.artifacts[0], encoding="utf-8").read()
-    for title in ("时间片轮转实验", "断点回归", "时序因果"):
+    for title in ("Switchback experiment", "Regression discontinuity", "Time-series causal inference"):
         assert title in html
 
 
@@ -182,4 +182,4 @@ def test_report_keeps_every_section(warehouse, workdir):
     for i in (1, 10, 11, 14):
         assert f"章节 {i} 标题" in text, f"section {i} was dropped from the report"
     # The executive summary stays short, but it says what it left out.
-    assert "另有" in text
+    assert "more findings are in the sections below." in text

@@ -46,7 +46,7 @@ def test_diagnose_can_use_holt_winters(agent):
     # An explicit model still reports its own out-of-sample error.
     assert 0 < baseline["mase"] < 1
     assert "Holt-Winters" in reply.text
-    assert any(i["label"] == "基线模型" for i in reply.blocks[0]["items"])
+    assert any(i["label"] == "baseline model" for i in reply.blocks[0]["items"])
 
 
 def test_auto_baseline_backtests_the_candidates(agent):
@@ -102,7 +102,7 @@ def test_report_writes_both_formats(agent, workdir):
     html_path = reply.artifacts[0]
     text = open(html_path, encoding="utf-8").read()
     assert "<img src=\"data:image/png;base64," in text
-    assert "执行摘要" in text
+    assert "Executive summary" in text
 
 
 def test_help_lists_capabilities(agent):
@@ -116,8 +116,7 @@ def test_help_lists_capabilities(agent):
     assert "例：" not in reply.text
 
     chinese = agent.ask("你能做什么？")
-    assert "例：" in chinese.text
-    assert "e.g." not in chinese.text
+    assert "e.g." in chinese.text
 
 
 def test_unknown_metric_degrades_gracefully(agent):
@@ -182,7 +181,7 @@ def test_ask_replans_to_next_best_intent_on_failure(agent, monkeypatch):
     replan = reply.data.get("replan")
     assert replan and replan["from"] == "experiment_analysis" and replan["to"] == "sql"
     assert replan["attempts"][0]["error"] == "readout exploded"
-    assert "已尝试" not in reply.text  # a recovery, not an error page
+    assert "That step failed" not in reply.text  # a recovery, not an error page
 
 
 def test_ask_reports_when_replanning_is_exhausted(agent, monkeypatch):
@@ -197,4 +196,4 @@ def test_ask_reports_when_replanning_is_exhausted(agent, monkeypatch):
     assert reply.data.get("replan_failed") is not None
     tried_intents = {a["intent"] for a in reply.data["replan_failed"]}
     assert {"experiment_analysis", "sql"} <= tried_intents
-    assert "没能完成" in reply.text
+    assert "That step failed" in reply.text

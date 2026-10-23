@@ -294,10 +294,10 @@ def dl_anomaly_confidence(result: Dict[str, Any], seasonal_flagged: Optional[np.
     # 1. The detector must actually fire somewhere, else it learned nothing.
     checks.append(
         {
-            "name_zh": "检出能力",
+            "name_zh": "detection power",
             "name_en": "detection power",
             "status": PASS if n_flag > 0 else WARN,
-            "detail_zh": f"标记 {n_flag} 个异常日" + ("" if n_flag else "，零检出时方法可能欠拟合或阈值过松"),
+            "detail_zh": f"{n_flag} anomalous days" + ("" if n_flag else "; zero hits can mean underfit or a loose threshold"),
             "detail_en": f"{n_flag} anomalous days" + ("" if n_flag else "; zero hits can mean underfit or a loose threshold"),
         }
     )
@@ -305,10 +305,10 @@ def dl_anomaly_confidence(result: Dict[str, Any], seasonal_flagged: Optional[np.
     # 2. Alert volume sanity: >10% of days flagged means the threshold collapsed.
     checks.append(
         {
-            "name_zh": "告警率合理性",
+            "name_zh": "alert volume",
             "name_en": "alert volume",
             "status": PASS if day_rate <= 0.10 else FAIL,
-            "detail_zh": f"异常日占比 {day_rate:.1%}（>10% 说明阈值失效）",
+            "detail_zh": f"anomalous-day share {day_rate:.1%} (>10% means the threshold collapsed)",
             "detail_en": f"anomalous-day share {day_rate:.1%} (>10% means the threshold collapsed)",
         }
     )
@@ -321,10 +321,10 @@ def dl_anomaly_confidence(result: Dict[str, Any], seasonal_flagged: Optional[np.
         rel = float(np.median(np.abs(rec - actual) / denom))
         checks.append(
             {
-                "name_zh": "重建质量",
+                "name_zh": "reconstruction quality",
                 "name_en": "reconstruction quality",
                 "status": PASS if rel < 0.05 else (WARN if rel < 0.15 else FAIL),
-                "detail_zh": f"重建相对误差中位数 {rel:.1%}（过大说明模型容量/窗口不匹配）",
+                "detail_zh": f"median relative reconstruction error {rel:.1%} (too large means capacity/window mismatch)",
                 "detail_en": f"median relative reconstruction error {rel:.1%} (too large means capacity/window mismatch)",
             }
         )
@@ -336,10 +336,10 @@ def dl_anomaly_confidence(result: Dict[str, Any], seasonal_flagged: Optional[np.
         sep = float(np.median(loud) / max(np.median(quiet), 1e-12))
         checks.append(
             {
-                "name_zh": "分数分离度",
+                "name_zh": "score separation",
                 "name_en": "score separation",
                 "status": PASS if sep >= 2.0 else WARN,
-                "detail_zh": f"异常分数/正常分数中位数比 {sep:.1f}x（≥2x 为清晰分离）",
+                "detail_zh": f"flagged/quiet median score ratio {sep:.1f}x (>=2x is a clean separation)",
                 "detail_en": f"flagged/quiet median score ratio {sep:.1f}x (>=2x is a clean separation)",
             }
         )
@@ -354,10 +354,10 @@ def dl_anomaly_confidence(result: Dict[str, Any], seasonal_flagged: Optional[np.
         jac = agree / union if union else 1.0
         checks.append(
             {
-                "name_zh": "与季节基线交叉验证",
+                "name_zh": "seasonal-baseline cross-check",
                 "name_en": "seasonal-baseline cross-check",
                 "status": PASS if jac > 0.3 or n_flag == 0 else WARN,
-                "detail_zh": f"Jaccard={jac:.2f}（与周季节基线共同命中的异常 {agree}/{union}）",
+                "detail_zh": f"Jaccard={jac:.2f} ({agree}/{union} anomaly days shared with the seasonal baseline)",
                 "detail_en": f"Jaccard={jac:.2f} ({agree}/{union} anomaly days shared with the seasonal baseline)",
             }
         )
@@ -365,11 +365,11 @@ def dl_anomaly_confidence(result: Dict[str, Any], seasonal_flagged: Optional[np.
     n_fail = sum(1 for c in checks if c["status"] == FAIL)
     score = sum(1 for c in checks if c["status"] == PASS) / max(1, len(checks))
     if n_fail:
-        verdict = {"label_zh": "低置信", "label_en": "low confidence", "score": score, "n_fail": n_fail}
+        verdict = {"label_zh": "low confidence", "label_en": "low confidence", "score": score, "n_fail": n_fail}
     elif score >= 0.8:
-        verdict = {"label_zh": "高置信", "label_en": "high confidence", "score": score, "n_fail": n_fail}
+        verdict = {"label_zh": "high confidence", "label_en": "high confidence", "score": score, "n_fail": n_fail}
     else:
-        verdict = {"label_zh": "中置信", "label_en": "medium confidence", "score": score, "n_fail": n_fail}
+        verdict = {"label_zh": "medium confidence", "label_en": "medium confidence", "score": score, "n_fail": n_fail}
     return {"checks": checks, "verdict": verdict, "score": score}
 
 
@@ -380,11 +380,11 @@ def dl_anomaly_table(dates: Sequence[Any], result: Dict[str, Any], lang: str = "
     dates = np.asarray(dates)
     return pd.DataFrame(
         {
-            zh and "日期" or "date": dates[idx - 1] if result.get("backend", "").startswith("mlp") or result.get("backend", "").startswith("lstm") else dates[idx],
-            zh and "实际值" or "actual": np.asarray(result["actual"], dtype=float),
-            zh and "重建值" or "reconstruction": np.asarray(result.get("reconstruction", result["actual"]), dtype=float),
-            zh and "异常分数" or "score": np.asarray(result["error"], dtype=float),
-            zh and "阈值" or "threshold": result.get("threshold", float("nan")),
-            zh and "异常" or "anomaly": np.asarray(result["flagged"], dtype=bool),
+            zh and "date" or "date": dates[idx - 1] if result.get("backend", "").startswith("mlp") or result.get("backend", "").startswith("lstm") else dates[idx],
+            zh and "actual" or "actual": np.asarray(result["actual"], dtype=float),
+            zh and "reconstruction" or "reconstruction": np.asarray(result.get("reconstruction", result["actual"]), dtype=float),
+            zh and "score" or "score": np.asarray(result["error"], dtype=float),
+            zh and "threshold" or "threshold": result.get("threshold", float("nan")),
+            zh and "anomaly" or "anomaly": np.asarray(result["flagged"], dtype=bool),
         }
     )

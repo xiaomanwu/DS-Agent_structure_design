@@ -47,13 +47,13 @@ def _entries() -> List[str]:
         lines += [
             f"#### {entry['name_zh']} / {entry['name_en']}",
             "",
-            f"- **原假设 / H0**: {entry['h0_zh']} / {entry['h0_en']}",
-            f"- **统计量 / Statistic**: `{entry['formula']}`",
-            f"- **前提 / Assumptions**: {entry['assume_zh']} / {entry['assume_en']}",
-            f"- **适用 / When to use**: {entry['use_zh']} / {entry['use_en']}",
-            f"- **判定 / Decision**: p < α → {entry['reject_zh']} / {entry['reject_en']}; "
+            f"- **Null hypothesis (H0)**: {entry['h0_zh']} / {entry['h0_en']}",
+            f"- **Statistic**: `{entry['formula']}`",
+            f"- **Assumptions**: {entry['assume_zh']} / {entry['assume_en']}",
+            f"- **When to use**: {entry['use_zh']} / {entry['use_en']}",
+            f"- **Decision**: p < α → {entry['reject_zh']} / {entry['reject_en']}; "
             f"otherwise → {entry['retain_zh']} / {entry['retain_en']}",
-            f"- **参考 / Reference**: {entry['ref']}（{entry['short_ref']}）",
+            f"- **Reference**: {entry['ref']} ({entry['short_ref']})",
             "",
         ]
     return lines

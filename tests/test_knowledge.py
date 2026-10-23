@@ -91,7 +91,7 @@ def test_agent_answers_from_knowledge_base(agent):
 
 def test_sql_reply_carries_caliber_note(agent):
     reply = agent.ask("近7天各渠道 GMV 排名")
-    assert "业务口径" in reply.text
+    assert "Business caliber" in reply.text
     assert "未支付" in reply.text  # the caliber note, not just the numbers
 
 

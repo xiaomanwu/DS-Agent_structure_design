@@ -58,46 +58,48 @@ def main() -> None:
 
     # 1. ------------------------------------------------- problem & assumptions
     print(rule("="))
-    print("1. 问题定义与识别假设 / PROBLEM & ASSUMPTIONS")
+    print("1. Problem definition & identifying assumptions / PROBLEM & ASSUMPTIONS")
     print(rule("="))
     print(f"""
-问题: 估计促销曝光 (promo) 对用户次月收入 (post_revenue) 的因果效应 (ATT)。
-难点: 曝光非随机 —— 高价值用户更容易被选中，朴素均值差混入选择偏差。
-假设:
-  A1 条件可忽略性   给定协变量 {covariates}，曝光近似随机（不可检验，靠设计论证）
-  A2 重叠性         每个处理组个体在对照组中有可比对象（可用数据诊断）
-  A3 SUTVA          用户之间无溢出（不可检验）""")
+Problem:  estimate the causal effect (ATT) of promo exposure (promo) on next-month revenue (post_revenue).
+Difficulty: exposure is not random — high-value users are more likely to be targeted, so a naive
+          mean difference carries selection bias.
+Assumptions:
+  A1 Conditional ignorability   given covariates {covariates}, exposure is approximately random
+                                (untestable; argued through design)
+  A2 Overlap                    every treated unit has comparable controls (diagnosable from data)
+  A3 SUTVA                      no spillover between users (untestable)""")
 
     # 2. ------------------------------------------------------ feasibility
     print(rule("="))
-    print("2. 可行性检验 / FEASIBILITY")
+    print("2. Feasibility checks / FEASIBILITY")
     print(rule("="))
     psm = propensity_score_matching(df, "promo", "post_revenue", covariates, n_bootstrap=200)
-    print(f"\n协变量平衡性 (SMD，匹配前 → 匹配后，|SMD|<0.1 视为平衡):")
+    print(f"\nCovariate balance (SMD, before → after matching; |SMD|<0.1 treated as balanced):")
     for b in psm["balance"]:
         flag = "OK " if b["balanced"] else "FAIL"
         print(f"  {b['covariate']:>18}  {b['smd_before']:+.3f} → {b['smd_after']:+.3f}   [{flag}]")
     s = psm["common_support"]
-    print(f"\n重叠性: 共同支撑 [{s['low']:.3f}, {s['high']:.3f}]，"
-          f"{s['n_treated_outside']} 个处理组个体在区间外 ({s['share_outside']:.1%})")
+    print(f"\nOverlap: common support [{s['low']:.3f}, {s['high']:.3f}]; "
+          f"{s['n_treated_outside']} treated units outside the interval ({s['share_outside']:.1%})")
 
     # 3. ----------------------------------------------------- the estimate
     print()
     print(rule("="))
-    print("3. 效应估计 / THE ESTIMATE")
+    print("3. Effect estimation / THE ESTIMATE")
     print(rule("="))
     naive = float(df.loc[df["promo"] == 1, "post_revenue"].mean()
                   - df.loc[df["promo"] == 0, "post_revenue"].mean())
-    print(f"\n  朴素均值差 (有偏):   {naive:+.4g}")
+    print(f"\n  Naive mean difference (biased):   {naive:+.4g}")
     print(f"  PSM  ATT:            {psm['att']:+.4g}   95% CI {psm['ci'][0]:+.4g}..{psm['ci'][1]:+.4g}   p={psm['p_value']:.4f}")
-    print(f"  匹配对数: {psm['n_matched_pairs']:,} (卡尺 {psm['caliper']:.3f})")
+    print(f"  Matched pairs: {psm['n_matched_pairs']:,} (caliper {psm['caliper']:.3f})")
 
     # 4. ----------------------------------------------------- robustness
     print()
     print(rule("="))
-    print("4. 稳健性检验 / ROBUSTNESS")
+    print("4. Robustness checks / ROBUSTNESS")
     print(rule("="))
-    print("\n[4a] 多方法一致性 (PSM / IPW / AIPW):")
+    print("\n[4a] Estimator agreement (PSM / IPW / AIPW):")
     est = compare_estimators(df, "promo", "post_revenue", covariates, n_bootstrap=60)
     for name in ("psm", "ipw", "aipw"):
         r = est.get(name, {})
@@ -107,51 +109,53 @@ def main() -> None:
             print(f"  {name.upper():5s}  {r['estimate']:+.4g}  CI [{r['ci'][0]:+.4g}, {r['ci'][1]:+.4g}]")
         else:
             print(f"  {name.upper():5s}  {r['att']:+.4g}")
-    print(f"  → 估计量间差异 {est['summary']['spread_pct']:.1%} "
-          f"({'稳健' if est['summary']['robust'] else '需警惕'})")
+    print(f"  → spread across estimators {est['summary']['spread_pct']:.1%} "
+          f"({'robust' if est['summary']['robust'] else 'caution warranted'})")
 
-    print("\n[4b] 安慰剂反驳 (打乱处理标签，效应必须消失):")
+    print("\n[4b] Placebo refutation (shuffle treatment labels; the effect must vanish):")
     pl = placebo_refutation(df, "promo", "post_revenue", covariates, n_placebo=8)
-    print(f"  {pl['n_placebo']} 次安慰剂: ATT {pl['placebo_mean']:+.4g}  "
-          f"90% 范围 [{pl['placebo_ci'][0]:+.4g}, {pl['placebo_ci'][1]:+.4g}]")
-    print(f"  真实 ATT {pl['real_att']:+.4g} → {'在安慰剂带之外，反驳检验通过' if pl['robust'] else '落在安慰剂带内 — 不可信'}")
+    print(f"  {pl['n_placebo']} placebo runs: ATT {pl['placebo_mean']:+.4g}  "
+          f"90% range [{pl['placebo_ci'][0]:+.4g}, {pl['placebo_ci'][1]:+.4g}]")
+    print(f"  real ATT {pl['real_att']:+.4g} → {'outside the placebo band; refutation passed' if pl['robust'] else 'inside the placebo band - not credible'}")
 
     # 5. ---------------------------------------------------- sensitivity
     print()
     print(rule("="))
-    print("5. 敏感性分析 / SENSITIVITY (Rosenbaum bounds)")
+    print("5. Sensitivity analysis / SENSITIVITY (Rosenbaum bounds)")
     print(rule("="))
-    print(f"\n不可观测混杂使处理分配优势比最多扩大 Γ 倍时，显著性是否存续 (p_upper < 0.05):")
+    print(f"\nWhen hidden confounding multiplies the odds of treatment assignment by at most Γ, does significance survive (p_upper < 0.05):")
     rb = rosenbaum_bounds(np.asarray(psm["pair_diffs"]))
     for r in rb:
         print(f"  Γ={r['gamma']:<4}  p in [{r['p_lower']:.2e}, {r['p_upper']:.2e}]   "
               f"{'survives' if r['survives'] else 'fails'}")
     ok = [r["gamma"] for r in rb if r["survives"]]
-    print(f"  → 结论在 Γ≤{max(ok):g} 内稳健" if ok else "  → 结论对隐藏混杂极脆弱")
+    print(f"  → conclusion is robust up to Γ≤{max(ok):g}" if ok else "  → conclusion is highly fragile to hidden confounding")
 
     # 6. ------------------------------------------------- method selection
     print()
     print(rule("="))
-    print("6. 假设不满足时的方法选择 / METHOD SELECTION")
+    print("6. Method selection when assumptions fail / METHOD SELECTION")
     print(rule("="))
     for a in method_selection_advice(psm):
-        print(f"\n  情形: {a['situation']}")
+        print(f"\n  Situation: {a['situation']}")
         print(f"  → {a['zh']}")
 
     # 7. ------------------------------------------------------ conclusion
     print()
     print(rule("="))
-    print("7. 结论与不确定性 / CONCLUSION & UNCERTAINTY")
+    print("7. Conclusion & uncertainty / CONCLUSION & UNCERTAINTY")
     print(rule("="))
     monthly = psm["att"] * psm["n_treated"]
     print(f"""
-  估计值:   ATT = {psm['att']:+.4g} 元/人/月  (bootstrap 95% CI [{psm['ci'][0]:+.4g}, {psm['ci'][1]:+.4g}], p={psm['p_value']:.4f})
-  不确定性: 仅对共同支撑区内的可比人群成立；Rosenbaum 边界给出混杂容忍上限；
-            三估计量差异 {est['summary']['spread_pct']:.1%} 是方法间不确定性的直接度量。
-  业务解释: 按处理组 {psm['n_treated']:,} 人折算，月增量收入约 ¥{round(monthly):,}。
-            朴素差异 {naive:+.4g} 高估了 {abs(naive - psm['att']) / abs(psm['att']):.0%} —— 那是把
-            "高价值用户本来就会花更多" 算成了促销效果。
-  决策建议: 若增量 > 单人补贴成本，可在与处理组相似的人群中扩大投放并用 A/B 验证。
+  Estimate:    ATT = {psm['att']:+.4g} per user-month  (bootstrap 95% CI [{psm['ci'][0]:+.4g}, {psm['ci'][1]:+.4g}], p={psm['p_value']:.4f})
+  Uncertainty: holds only for the comparable population inside the common support; Rosenbaum bounds
+               cap the tolerated confounding; the {est['summary']['spread_pct']:.1%} spread across the three
+               estimators is a direct measure of method uncertainty.
+  Business:    scaled to the {psm['n_treated']:,} treated users, roughly ¥{round(monthly):,} in incremental monthly revenue.
+               The naive difference {naive:+.4g} overstates the effect by {abs(naive - psm['att']) / abs(psm['att']):.0%} — it books
+               "high-value users would have spent more anyway" as promo impact.
+  Decision:    if the increment exceeds the per-user subsidy cost, expand delivery to a population
+               similar to the treated group and verify with an A/B test.
 """)
 
 

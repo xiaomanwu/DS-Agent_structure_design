@@ -72,7 +72,7 @@ def test_tree_table_and_chart_render(windows):
     current, baseline, metric, table = windows
     tree = root_cause_tree(current, baseline, metric, DIMS, max_depth=2, value_labels=table.value_labels)
     df = tree_table(tree, "zh")
-    assert "下钻路径" in df.columns
+    assert "drill-down path" in df.columns
     assert len(df) == tree["n_nodes"]
     uri = charts.root_cause_tree_chart(tree["nodes"])
     assert uri.startswith("data:image/png;base64,")

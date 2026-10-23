@@ -162,11 +162,11 @@ def _did_diagnostics(data: pd.DataFrame, fit, unit: str, outcome: str) -> List[D
                 median_val,
                 1.0 if abs(median_val - 2) <= 0.5 else 0.01,
                 n=len(vals),
-                note_zh=f"{len(vals)} 个城市分别计算后取中位数",
+                note_zh=f"computed per city over {len(vals)} cities, median reported",
                 note_en=f"computed per city over {len(vals)} cities, median reported",
             )
             median["p_approx"] = True
-            median["name_zh"] += "（城市内，中位数）"
+            median["name_zh"] += " (within city, median)"
             median["name_en"] += " (within city, median)"
             out.append(median)
     except Exception:  # noqa: BLE001
@@ -726,7 +726,7 @@ def method_selection_advice(psm: Dict[str, object]) -> List[Dict[str, str]]:
         advice.append(
             {
                 "situation": f"{share_out:.1%} treated units lack common support",
-                "zh": f"{share_out:.1%} 的处理组个体落在共同支撑区外 → 先按倾向得分修剪（trimming）或改用 IPW+截断权重；极端选择机制下改断点回归（RDD）。",
+                "zh": f"{share_out:.1%} of treated units fall outside common support → trim by propensity score or switch to IPW with truncated weights; under extreme selection prefer RDD.",
                 "en": f"{share_out:.1%} of treated units fall outside common support → trim by propensity score or switch to IPW with truncated weights; under extreme selection prefer RDD.",
             }
         )
@@ -734,7 +734,7 @@ def method_selection_advice(psm: Dict[str, object]) -> List[Dict[str, str]]:
         advice.append(
             {
                 "situation": f"{n_unbalanced} covariates remain unbalanced after matching",
-                "zh": f"匹配后仍有 {n_unbalanced} 个协变量不平衡（|SMD|>0.1）→ 收紧卡尺、改 1:k 有放回匹配，或把这些协变量直接塞进结果回归（回归调整）。",
+                "zh": f"{n_unbalanced} covariates stay unbalanced (|SMD|>0.1) → tighten the caliper, use 1:k matching with replacement, or residualise via regression adjustment.",
                 "en": f"{n_unbalanced} covariates stay unbalanced (|SMD|>0.1) → tighten the caliper, use 1:k matching with replacement, or residualise via regression adjustment.",
             }
         )
@@ -742,14 +742,14 @@ def method_selection_advice(psm: Dict[str, object]) -> List[Dict[str, str]]:
         advice.append(
             {
                 "situation": "assumptions hold",
-                "zh": "平衡性与重叠性均通过 → 维持 PSM 结论；若处理是面板内政策，可叠加 DiD 做双重稳健互证。",
+                "zh": "Balance and overlap pass → keep the PSM conclusion; for panel policies, cross-check with DiD.",
                 "en": "Balance and overlap pass → keep the PSM conclusion; for panel policies, cross-check with DiD.",
             }
         )
     advice.append(
         {
             "situation": "unmeasured confounding suspected",
-            "zh": "存在无法观测的混杂（如内部用户分）→ 敏感性用 Rosenbaum 边界量化；识别上改差分中的差分或工具变量，不要只靠匹配。",
+            "zh": "Unmeasured confounding suspected (e.g. internal user tier) → quantify with Rosenbaum bounds; identify via DiD or an instrument, not matching alone.",
             "en": "Unmeasured confounding suspected (e.g. internal user tier) → quantify with Rosenbaum bounds; identify via DiD or an instrument, not matching alone.",
         }
     )

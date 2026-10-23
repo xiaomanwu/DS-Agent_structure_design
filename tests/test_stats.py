@@ -29,7 +29,7 @@ def test_catalogue_is_complete_and_unique():
 
 def test_catalogue_covers_every_family():
     families = {c["family_zh"] for c in T.catalogue()}
-    for expected in ("正态性", "方差", "位置", "比例", "时序", "回归", "重抽样", "多重检验"):
+    for expected in ("Normality", "Variance", "Location", "Proportion", "Time series", "Regression", "Resampling", "Multiplicity"):
         assert expected in families
 
 
@@ -162,7 +162,7 @@ def test_degenerate_input_returns_skipped_never_raises(fn, args):
     out = fn(*args)
     assert out["status"] == "skipped"
     assert out["decision"] == "skipped"
-    assert out["conclusion_zh"].startswith("未执行")
+    assert out["conclusion_zh"].startswith("skipped")
 
 
 # --------------------------------------------------------------------------- #
@@ -173,7 +173,7 @@ def test_frame_and_summary_carry_the_reasoning():
     a, b = rng.normal(size=100), rng.normal(0.5, size=100)
     battery = [T.welch_t(a, b), T.mann_whitney(a, b), T.levene(a, b)]
     frame = T.to_frame(battery, "zh")
-    assert list(frame.columns) == ["检验", "统计量", "p", "结论", "参考"]
+    assert list(frame.columns) == ["test", "statistic", "p", "conclusion", "reference"]
     assert len(frame) == 3
     line_zh = T.summary_line(battery, "zh")
     assert "Welch" in line_zh and "p=" in line_zh
@@ -192,7 +192,7 @@ def test_anomaly_panel_finds_a_real_incident():
     panel = panels.anomaly_panel(values, expected, series=np.r_[expected * 1.02, values])
     assert panel["agreement"] is True
     assert panel["tests"][2]["decision"] == "reject"  # paired t against the baseline
-    assert "检验" in panel["summary_zh"]
+    assert "tests accompany this conclusion" in panel["summary_zh"]
 
 
 def test_experiment_panel_proportion_and_mean():
@@ -241,7 +241,7 @@ def test_psm_panel_uses_the_estimator_tests():
     }
     panel = panels.psm_panel(psm)
     assert [t["key"] for t in panel["tests"]] == ["paired_t", "welch_t"]
-    assert "ATT" in panel["tests"][0]["note_zh"] and "spend" in panel["tests"][1]["note_zh"]
+    assert "ATT" in panel["tests"][0]["conclusion_zh"] and "spend" in panel["tests"][1]["note_zh"]
 
 
 # --------------------------------------------------------------------------- #
@@ -257,7 +257,7 @@ def test_router_sends_test_questions_to_the_tests_capability(agent):
 
 def test_tests_capability_explains_any_catalogue_entry(agent):
     reply = agent.ask("什么是 Mann-Whitney U 检验")
-    assert "原假设" in reply.text
+    assert "H0:" in reply.text
     assert "Mann" in reply.text and "1947" in reply.text
     assert reply.blocks and reply.blocks[0]["type"] == "table"
 
@@ -265,17 +265,17 @@ def test_tests_capability_explains_any_catalogue_entry(agent):
 def test_diagnose_answer_ships_the_test_table(agent):
     reply = agent.ask("最近7天 GMV 为什么跌了？")
     titles = [b.get("title", "") for b in reply.blocks]
-    assert any("统计检验" in t for t in titles)
-    table = next(b for b in reply.blocks if "统计检验" in b.get("title", ""))
-    assert "结论" in table["columns"]
-    assert "**统计检验**" in reply.text
+    assert any("Statistical tests" in t for t in titles)
+    table = next(b for b in reply.blocks if "Statistical tests" in b.get("title", ""))
+    assert "conclusion" in table["columns"]
+    assert "**Statistical tests**" in reply.text
 
 
 def test_experiment_answer_ships_proportion_and_mean_tests(agent):
     reply = agent.ask("看下这个 AB 实验的结果")
-    table = next(b for b in reply.blocks if "统计检验" in b.get("title", ""))
+    table = next(b for b in reply.blocks if "Statistical tests" in b.get("title", ""))
     names = [row[0] for row in table["rows"]]
-    assert any("两比例" in n for n in names)
+    assert any("Two-proportion" in n for n in names)
     assert any("Welch" in n for n in names)
 
 

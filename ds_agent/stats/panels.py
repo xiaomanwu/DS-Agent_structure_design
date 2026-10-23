@@ -28,45 +28,45 @@ from . import tests as T
 # Readout -> (test keys, bilingual description). Used by docs/statistical_tests.md.
 PANEL_SPEC: Dict[str, Dict[str, Any]] = {
     "anomaly": {
-        "name_zh": "指标异动诊断",
+        "name_zh": "Metric anomaly diagnosis",
         "name_en": "Metric anomaly diagnosis",
         "tests": ["shapiro_wilk|dagostino_k2", "jarque_bera", "paired_t", "wilcoxon", "ljung_box", "durbin_watson", "adf", "kpss"],
-        "why_zh": "先确认残差能否用正态理论，再判断窗口值相对季节性基线是否显著；秩检验与自相关检验负责结论的稳健性。",
+        "why_zh": "Normality gates the normal-theory test, the paired test judges the window against its seasonal baseline, and the rank/autocorrelation checks guard the conclusion.",
         "why_en": "Normality gates the normal-theory test, the paired test judges the window against its seasonal baseline, and the rank/autocorrelation checks guard the conclusion.",
     },
     "experiment": {
-        "name_zh": "AB 实验读数",
+        "name_zh": "Experiment readout",
         "name_en": "Experiment readout",
         "tests": ["dagostino_k2|shapiro_wilk", "levene", "bartlett", "welch_t", "student_t", "mann_whitney", "ks_two_sample", "bootstrap", "permutation", "two_proportion_z", "chi_square_independence", "fisher_exact", "chi_square_gof", "bh_fdr"],
-        "why_zh": "SRM 卡方先验分流健康度，方差与正态检验决定用 Welch 还是 Student t，秩/KS/自助法/置换检验交叉验证解析结论，BH 控制多指标误报。",
+        "why_zh": "SRM gates the split, variance/normality tests choose Welch vs Student, rank/KS/bootstrap/permutation cross-check the analytic result, and BH controls multiplicity.",
         "why_en": "SRM gates the split, variance/normality tests choose Welch vs Student, rank/KS/bootstrap/permutation cross-check the analytic result, and BH controls multiplicity.",
     },
     "did": {
-        "name_zh": "双重差分（DiD）",
+        "name_zh": "Difference-in-differences",
         "name_en": "Difference-in-differences",
         "tests": ["wald_joint_f", "breusch_pagan", "durbin_watson", "jarque_bera"],
-        "why_zh": "前置期联合 F 检验是平行趋势的证据；残差异方差/自相关/正态检验决定标准误是否需要聚类或 HAC 修正。",
+        "why_zh": "The joint F test on leads is the parallel-trends evidence; residual heteroskedasticity/autocorrelation/normality decide whether cluster or HAC errors are required.",
         "why_en": "The joint F test on leads is the parallel-trends evidence; residual heteroskedasticity/autocorrelation/normality decide whether cluster or HAC errors are required.",
     },
     "its": {
-        "name_zh": "时序因果（ITS / 结构反事实）",
+        "name_zh": "Time-series causal (ITS / structural counterfactual)",
         "name_en": "Time-series causal (ITS / structural counterfactual)",
         "tests": ["adf", "kpss", "ljung_box", "durbin_watson", "jarque_bera"],
-        "why_zh": "先判定平稳性（ADF 与 KPSS 互补），再检查残差白噪声与一阶自相关，否则 p 值与置信区间会被高估。",
+        "why_zh": "Stationarity first (ADF and KPSS are complements), then residual whiteness and first-order autocorrelation; without them the p-values and CIs are overstated.",
         "why_en": "Stationarity first (ADF and KPSS are complements), then residual whiteness and first-order autocorrelation; without them the p-values and CIs are overstated.",
     },
     "modeling": {
-        "name_zh": "建模（分类/回归）",
+        "name_zh": "Modeling (classification/regression)",
         "name_en": "Modeling (classification/regression)",
         "tests": ["jarque_bera", "durbin_watson", "breusch_pagan", "variance_inflation", "hosmer_lemeshow", "mcnemar"],
-        "why_zh": "回归侧看残差正态/自相关/异方差与共线性，分类侧看概率校准（Hosmer-Lemeshow）与模型间差异（McNemar）；这些决定模型能否被当作决策依据。",
+        "why_zh": "Regression: residual normality/autocorrelation/heteroskedasticity and collinearity. Classification: calibration (Hosmer-Lemeshow) and a McNemar comparison between models. Together they decide whether the model can drive a decision.",
         "why_en": "Regression: residual normality/autocorrelation/heteroskedasticity and collinearity. Classification: calibration (Hosmer-Lemeshow) and a McNemar comparison between models. Together they decide whether the model can drive a decision.",
     },
     "psm": {
-        "name_zh": "倾向得分匹配（PSM）",
+        "name_zh": "Propensity score matching",
         "name_en": "Propensity score matching",
         "tests": ["paired_t", "welch_t"],
-        "why_zh": "匹配对的配对 t 检验给出 ATT 的解析推断（与 bootstrap 互补），匹配后协变量的 Welch 检验配合 SMD 绝对值<0.1 判断平衡；重叠性由共同支撑占比判断（大样本下 KS 检验会因微小差异误拒）。",
+        "why_zh": "A paired t-test on matched pairs gives the analytic ATT inference (complementing the bootstrap), a Welch test on the worst covariate confirms balance alongside an SMD below 0.1, and overlap is judged by the common-support share (a KS test rejects on immaterial differences at scale).",
         "why_en": "A paired t-test on matched pairs gives the analytic ATT inference (complementing the bootstrap), a Welch test on the worst covariate confirms balance alongside an SMD below 0.1, and overlap is judged by the common-support share (a KS test rejects on immaterial differences at scale).",
     },
 }
@@ -80,20 +80,20 @@ def _panel(tests: Sequence[Dict[str, Any]], primary_keys: Sequence[str], lang_no
     agreement: Optional[bool] = len(decisions) == 1 if len(primary) >= 2 else None
 
     if not ran:
-        headline_zh = "数据不足，未能执行统计检验。"
+        headline_zh = "Not enough data to run the tests."
         headline_en = "Not enough data to run the tests."
     elif agreement is True:
         if decisions == {"reject"}:
-            headline_zh = f"{len(primary)} 项主检验一致拒绝原假设：差异/偏离是统计显著的，不是抽样波动。"
+            headline_zh = f"All {len(primary)} primary tests reject H0: the difference is significant, not sampling noise."
             headline_en = f"All {len(primary)} primary tests reject H0: the difference is significant, not sampling noise."
         else:
-            headline_zh = f"{len(primary)} 项主检验一致不拒绝原假设：数据不支持存在差异的结论。"
+            headline_zh = f"All {len(primary)} primary tests retain H0: the data do not support a difference."
             headline_en = f"All {len(primary)} primary tests retain H0: the data do not support a difference."
     elif agreement is False:
-        headline_zh = "主检验结论不一致：以稳健/非参数检验为准，并检查分布假设与异常值。"
+        headline_zh = "Primary tests disagree: defer to the robust/non-parametric result and inspect assumptions and outliers."
         headline_en = "Primary tests disagree: defer to the robust/non-parametric result and inspect assumptions and outliers."
     else:
-        headline_zh = f"已执行 {len(ran)} 项检验，用于核对结论的前提与稳健性。"
+        headline_zh = f"{len(ran)} tests ran, checking the prerequisites and robustness of the conclusion."
         headline_en = f"{len(ran)} tests ran, checking the prerequisites and robustness of the conclusion."
 
     return {
@@ -112,7 +112,7 @@ def _safe(fn, *args, **kwargs) -> Dict[str, Any]:
         return fn(*args, **kwargs)
     except Exception as exc:  # noqa: BLE001 - diagnostics must never break the answer
         key = getattr(fn, "__name__", "test")
-        return T.skipped(key, f"执行异常：{exc}", f"failed: {exc}")
+        return T.skipped(key, f"failed: {exc}", f"failed: {exc}")
 
 
 # --------------------------------------------------------------------------- #
@@ -144,7 +144,7 @@ def anomaly_panel(
         tests.append(_safe(T.durbin_watson, residual, alpha))
         tests.append(_safe(T.adf, arr, alpha))
         tests.append(_safe(T.kpss, arr, alpha))
-    return _panel(tests, ["paired_t", "wilcoxon"], "（残差基于季节性基线）")
+    return _panel(tests, ["paired_t", "wilcoxon"], " (residuals vs seasonal baseline)")
 
 
 # --------------------------------------------------------------------------- #
@@ -179,9 +179,9 @@ def experiment_panel(
         if sparse:
             tests.append(_safe(T.fisher_exact, table, alpha))
         else:
-            tests.append(T._skipped("fisher_exact", "期望频数充足，z 检验已足够", "counts are large enough for the z test"))
+            tests.append(T._skipped("fisher_exact", "counts are large enough for the z test", "counts are large enough for the z test"))
         tests.append(_safe(T.chi_square_gof, [n1, n2], None, alpha))
-        return _panel(tests, ["two_proportion_z", "chi_square_independence"], "（比例指标）")
+        return _panel(tests, ["two_proportion_z", "chi_square_independence"], " (proportion metric)")
 
     tests.extend([_arm_normality(c, "control"), _arm_normality(t, "treatment")])
     tests.append(_safe(T.levene, c, t, alpha))
@@ -200,9 +200,9 @@ def experiment_panel(
 def _arm_normality(values: np.ndarray, arm: str) -> Dict[str, Any]:
     """Normality per arm, labelled so the table says which arm was tested."""
     res = T.normality_tests(values)[0]
-    zh = "对照组" if arm == "control" else "实验组"
+    zh = "control arm" if arm == "control" else "treatment arm"
     en = "control arm" if arm == "control" else "treatment arm"
-    res["name_zh"] = f"{res['name_zh']}（{zh}）"
+    res["name_zh"] = f"{res['name_zh']} ({zh})"
     res["name_en"] = f"{res['name_en']} ({en})"
     return res
 
@@ -270,13 +270,13 @@ def model_panel(model_result: Dict[str, Any], alpha: float = 0.05) -> Dict[str, 
             b = int(np.sum(best_ok & ~other_ok))
             c = int(np.sum(~best_ok & other_ok))
             res = _safe(T.mcnemar, b, c, alpha)
-            res["name_zh"] = f"{res['name_zh']}（{best} vs {others[0]}）"
+            res["name_zh"] = f"{res['name_zh']} ({best} vs {others[0]})"
             res["name_en"] = f"{res['name_en']} ({best} vs {others[0]})"
             sig = res.get("decision") == "reject"
             res["conclusion_zh"] = (
-                "两个模型在同一测试集上的错误率差异显著，选表现更好的那个"
+                "the two models differ significantly on the test set; keep the better one"
                 if sig
-                else "两个模型在测试集上的错误分布无显著差异，优先选更简单的模型"
+                else "no significant difference between the models; prefer the simpler one"
             )
             res["conclusion_en"] = (
                 "the two models differ significantly on the test set; keep the better one"
@@ -284,7 +284,7 @@ def model_panel(model_result: Dict[str, Any], alpha: float = 0.05) -> Dict[str, 
                 else "no significant difference between the models; prefer the simpler one"
             )
             tests.append(res)
-        return _panel(tests, ["hosmer_lemeshow"], "（分类：校准 + 模型对比）")
+        return _panel(tests, ["hosmer_lemeshow"], " (classification: calibration + model comparison)")
 
     resid = y_true - pred
     tests.append(_safe(T.jarque_bera, resid, alpha))
@@ -297,7 +297,7 @@ def model_panel(model_result: Dict[str, Any], alpha: float = 0.05) -> Dict[str, 
     if exog is not None:
         tests.append(_safe(T.breusch_pagan, resid, exog, alpha))
         tests.append(_safe(T.variance_inflation, np.asarray(X_te, dtype=float), list(X_te.columns)))
-    return _panel(tests, ["jarque_bera"], "（回归：残差诊断）")
+    return _panel(tests, ["jarque_bera"], " (regression: residual diagnostics)")
 
 
 def psm_panel(psm: Dict[str, Any], alpha: float = 0.05) -> Dict[str, Any]:
@@ -317,13 +317,13 @@ def psm_panel(psm: Dict[str, Any], alpha: float = 0.05) -> Dict[str, Any]:
                 att_test.get("p_value"),
                 n=psm.get("n_matched_pairs"),
                 alpha=alpha,
-                note_zh="匹配对的 ATT 配对 t 检验（与 bootstrap 区间互补）",
+                note_zh="paired t-test over matched pairs (complements the bootstrap interval)",
                 note_en="paired t-test over matched pairs (complements the bootstrap interval)",
             )
         )
         sig = tests[-1]["decision"] == "reject"
         tests[-1]["conclusion_zh"] = (
-            "匹配对的效应显著非零：ATT 可与 0 区分" if sig else "匹配对效应不显著：ATT 无法与 0 区分"
+            "the matched-pair effect is non-zero: the ATT is distinguishable from 0" if sig else "the matched-pair effect is not significant: the ATT cannot be distinguished from 0"
         )
         tests[-1]["conclusion_en"] = (
             "the matched-pair effect is non-zero: the ATT is distinguishable from 0"
@@ -340,11 +340,12 @@ def psm_panel(psm: Dict[str, Any], alpha: float = 0.05) -> Dict[str, Any]:
                 worst.get("p_after"),
                 n=psm.get("n_matched_pairs"),
                 alpha=alpha,
-                note_zh=f"最不平衡协变量 {worst.get('covariate')}：匹配后 |SMD|={abs(float(worst.get('smd_after') or 0)):.3f}（阈值 0.1）",
+                note_zh=f"worst covariate {worst.get('covariate')}: |SMD| after matching="
+                f"{abs(float(worst.get('smd_after') or 0)):.3f} (threshold 0.1)",
                 note_en=f"worst covariate {worst.get('covariate')}: |SMD| after matching="
                 f"{abs(float(worst.get('smd_after') or 0)):.3f} (threshold 0.1)",
             )
         )
-        tests[-1]["name_zh"] = f"{tests[-1]['name_zh']}（匹配后协变量平衡）"
+        tests[-1]["name_zh"] = f"{tests[-1]['name_zh']} (post-match balance)"
         tests[-1]["name_en"] = f"{tests[-1]['name_en']} (post-match balance)"
     return _panel(tests, [], "")

@@ -1,18 +1,18 @@
 {"id": "sql_gmv_by_channel", "capability": "sql", "question": "近30天各渠道的 GMV 和订单量是多少？", "expect": ["109,003,945.49", "channel"], "note": "30-day total GMV is fixed by the seeded synthetic warehouse"}
-{"id": "diagnose_gmv_drop", "capability": "diagnose", "question": "近7天 GMV 为什么跌了？", "expect": ["-7.06%", "p=0.002", "贡献"], "note": "drop magnitude and significance are warehouse-stable"}
+{"id": "diagnose_gmv_drop", "capability": "diagnose", "question": "近7天 GMV 为什么跌了？", "expect": ["-7.06%", "p=0.002", "Root-cause tree"], "note": "drop magnitude and significance are warehouse-stable"}
 {"id": "sampling_size_proportion", "capability": "sampling", "question": "满意度调查基线70%，检测3个百分点变化，需要多少样本？", "expect": ["2,452", "4,904"], "note": "Cochran sizing, exact z math"}
 {"id": "sampling_size_en", "capability": "sampling", "question": "How many samples do I need for a satisfaction survey with a 70% baseline to detect a 3pp change?", "expect": ["2,452"], "note": "EN routing without the word 'sample size'"}
-{"id": "sampling_draw_stratified", "capability": "sampling", "question": "从用户表分层抽样2000个并检验代表性", "expect": ["seed=7", "95% CI", "代表性"], "note": "seeded, reproducible draw"}
-{"id": "exp_design_ab", "capability": "experiment_design", "question": "设计一个支付转化率实验，基线3%，希望检测2%的相对提升，每天5万流量", "expect": ["标准 A/B 实验", "样本量"], "note": "archetype selection + sizing"}
+{"id": "sampling_draw_stratified", "capability": "sampling", "question": "从用户表分层抽样2000个并检验代表性", "expect": ["seed=7", "95% CI", "representativeness"], "note": "seeded, reproducible draw"}
+{"id": "exp_design_ab", "capability": "experiment_design", "question": "设计一个支付转化率实验，基线3%，希望检测2%的相对提升，每天5万流量", "expect": ["Standard A/B test", "Sizing"], "note": "archetype selection + sizing"}
 {"id": "exp_readout_srm", "capability": "experiment_analysis", "question": "看下这个 AB 实验的结果", "expect": ["SRM"], "note": "readout must open with the SRM gate"}
 {"id": "did_subsidy", "capability": "causal", "question": "用双重差分评估补贴政策对城市GMV的影响", "expect": ["ATT", "95% CI", "275,432.40"], "note": "TWFE ATT on the seeded panel"}
 {"id": "did_en", "capability": "causal", "question": "Evaluate the subsidy policy on city GMV with DiD", "expect": ["ATT"], "note": "EN causal routing"}
-{"id": "psm_promotion", "capability": "causal", "question": "用倾向得分匹配评估促销对转化的效果", "expect": ["倾向", "选择偏差"], "note": "PSM must call out selection bias before quoting numbers"}
+{"id": "psm_promotion", "capability": "causal", "question": "用倾向得分匹配评估促销对转化的效果", "expect": ["PSM", "selection bias"], "note": "PSM must call out selection bias before quoting numbers"}
 {"id": "uplift_qini", "capability": "uplift", "question": "用uplift模型找出值得发券的用户", "expect": ["Qini", "AIPW"], "note": "causal forest with cross-fitted AIPW validation"}
 {"id": "modeling_classifier", "capability": "modeling", "question": "训练分类模型预测用户是否转化", "expect": ["roc_auc=0.8023", "logistic_regression"], "note": "pipeline is deterministic; metric string is exact"}
-{"id": "dashboard_generate", "capability": "dashboard", "question": "给我生成一个GMV监控看板", "expect": ["看板已生成", ".html"], "note": "standalone HTML artifact"}
+{"id": "dashboard_generate", "capability": "dashboard", "question": "给我生成一个GMV监控看板", "expect": ["Dashboard ready", ".html"], "note": "standalone HTML artifact"}
 {"id": "knowledge_gmv_caliber", "capability": "knowledge", "question": "GMV的口径是什么？", "expect": ["口径"], "note": "RAG over business_knowledge corpus"}
-{"id": "method_advisor_did", "capability": "method_select", "question": "我想评估上新对用户留存的影响，两组城市，政策前后各一个月，该用什么方法？", "expect": ["倾向得分匹配（PSM）", "假设"], "note": "advisor recommends matching with honest assumption flags"}
+{"id": "method_advisor_did", "capability": "method_select", "question": "我想评估上新对用户留存的影响，两组城市，政策前后各一个月，该用什么方法？", "expect": ["matching", "assumptions"], "note": "advisor recommends matching with honest assumption flags"}
 {"id": "diagnose_en", "capability": "diagnose", "question": "Why did GMV drop in the last 7 days?", "expect": ["-7.06%", "p=0.002"], "note": "EN routing into the same deterministic diagnosis"}
-{"id": "sampling_size_mean", "capability": "sampling", "question": "要检验人均消费提升5元（标准差80），每组需要多少样本？", "expect": ["标准差 σ=80", "δ=5", "2,690"], "note": "mean mode: mde stays in original units, not divided by 100"}
-{"id": "exp_design_switchback_hint", "capability": "experiment_design", "question": "设计一个外卖配送时效实验，同一骑手会被多次分配，该怎么设计？", "expect": ["switchback", "样本量"], "note": "repeated-exposure archetype must not fall back to plain AB"}
+{"id": "sampling_size_mean", "capability": "sampling", "question": "要检验人均消费提升5元（标准差80），每组需要多少样本？", "expect": ["sd σ=80", "δ=5", "2,690"], "note": "mean mode: mde stays in original units, not divided by 100"}
+{"id": "exp_design_switchback_hint", "capability": "experiment_design", "question": "设计一个外卖配送时效实验，同一骑手会被多次分配，该怎么设计？", "expect": ["switchback", "Sizing"], "note": "repeated-exposure archetype must not fall back to plain AB"}

@@ -89,11 +89,11 @@ def test_agent_registers_via_natural_language(setup):
     assert md.get("利润率") is not None
     # Invalid caliber is rejected with a reason, not executed.
     reply2 = agent.ask("注册指标：坏指标 = gmv / 不存在的列")
-    assert "驳回" in reply2.text
+    assert "Registration rejected" in reply2.text
     assert md.get("坏指标") is None
     # Dictionary listing includes preset + custom entries.
     reply3 = agent.ask("指标字典")
-    assert "指标字典" in reply3.text
+    assert "dictionary holds" in reply3.text
 
 
 def test_dictionary_persists_to_json(setup, workdir: Path):

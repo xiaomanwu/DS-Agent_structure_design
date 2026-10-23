@@ -40,30 +40,30 @@ def main() -> None:
 
     print("DS-Agent — core capability demo (deterministic mode, no LLM key needed)")
 
-    show("1. 自然语言查询（语义层口径 + 只读 SQL）", agent.ask("近30天各渠道 GMV 排名"))
-    show("2. 指标异动诊断（异常检测 + 贡献度 + 根因下钻 + 置信卡）", agent.ask("最近14天 GMV 为什么跌了？"))
-    show("3. 实验设计（15 种实验类型的样本量/时效/分流方案）", agent.ask("支付转化率实验，基线3%，检测2%相对提升，每天5万流量，怎么设计？"))
-    show("4. 实验分析（SRM + 显著性 + CUPED + 置信卡）", agent.ask("看下这个 AB 实验的结果"))
-    show("5. 因果推断（DID / PSM / 开源引擎交叉验证）", agent.ask("用双重差分评估这次改版对 GMV 的影响"))
-    show("6. Uplift 建模（因果森林 + Qini + 人群定向）", agent.ask("用因果森林看哪类用户对补贴最敏感"))
-    show("7. 断点回归（RDD）", agent.ask("用断点回归评估会员门槛的效果"))
-    show("8. 建模能力（特征工程 + 分类/回归 + 特征重要性 + 置信卡）", agent.ask("训练分类模型预测用户是否转化，看特征重要性"))
-    show("9. 看板（KPI + 趋势 + 拆解 + 异动，独立 HTML）", agent.ask("给我生成一个 GMV 监控看板"))
-    show("10. 指标字典：注册自定义指标（列校验 + 语义层生效）", agent.ask("注册指标：利润率 = (gmv - refund_amount) / gmv"))
-    show("11. 新指标直接进入全链路分析", agent.ask("近7天各渠道 利润率 排名"))
-    show("12. 指标字典：查看口径清单", agent.ask("指标字典"))
+    show("1. Natural-language query (semantic-layer metrics + read-only SQL)", agent.ask("近30天各渠道 GMV 排名"))
+    show("2. Metric change diagnosis (anomaly detection + contribution + root-cause drill-down + confidence card)", agent.ask("最近14天 GMV 为什么跌了？"))
+    show("3. Experiment design (sample size / timeline / assignment across 15 designs)", agent.ask("支付转化率实验，基线3%，检测2%相对提升，每天5万流量，怎么设计？"))
+    show("4. Experiment readout (SRM + significance + CUPED + confidence card)", agent.ask("看下这个 AB 实验的结果"))
+    show("5. Causal inference (DiD / PSM / OSS cross-validation)", agent.ask("用双重差分评估这次改版对 GMV 的影响"))
+    show("6. Uplift modelling (causal forest + Qini + audience targeting)", agent.ask("用因果森林看哪类用户对补贴最敏感"))
+    show("7. Regression discontinuity (RDD)", agent.ask("用断点回归评估会员门槛的效果"))
+    show("8. Modelling (feature engineering + classification/regression + feature importance + confidence card)", agent.ask("训练分类模型预测用户是否转化，看特征重要性"))
+    show("9. Dashboard (KPI + trend + breakdown + anomalies, standalone HTML)", agent.ask("给我生成一个 GMV 监控看板"))
+    show("10. Metric dictionary: register a custom metric (column checks, live in the semantic layer)", agent.ask("注册指标：利润率 = (gmv - refund_amount) / gmv"))
+    show("11. The new metric flows into the full analysis pipeline", agent.ask("近7天各渠道 利润率 排名"))
+    show("12. Metric dictionary: list metric definitions", agent.ask("指标字典"))
 
     # 13. external data source: write a small offline sheet, attach, query.
     import pandas as pd
 
     budget = workspace / "budget_2026H2.xlsx"
     pd.DataFrame({"month": ["2026-07", "2026-08", "2026-09"], "budget": [8_100_000, 8_300_000, 8_600_000]}).to_excel(budget, index=False)
-    show("13. 数据源关联：离线表格接入", agent.ask(f"关联数据源 {budget} 叫 budget"))
-    show("14. 外部表直接查询", agent.ask("查一下 budget 全部行"))
+    show("13. Data source attach: bring in an offline sheet", agent.ask(f"关联数据源 {budget} 叫 budget"))
+    show("14. Query the external table directly", agent.ask("查一下 budget 全部行"))
 
-    show("15. 业务知识 RAG（含指标定义知识库）", agent.ask("GMV 的口径是什么？"))
-    show("16. 方法选型（按场景推荐统计/因果方法）", agent.ask("没有对照组，只有上线前后的数据，该用什么方法评估效果？"))
-    show("17. 报告生成（汇总本次会话全部发现）", agent.ask("把分析写成周报"))
+    show("15. Business knowledge RAG (metric-definition knowledge base)", agent.ask("GMV 的口径是什么？"))
+    show("16. Method selection (statistical/causal method recommended per scenario)", agent.ask("没有对照组，只有上线前后的数据，该用什么方法评估效果？"))
+    show("17. Report generation (summarises every finding in this session)", agent.ask("把分析写成周报"))
 
     agent.ask("下线指标 利润率")
     agent.close()

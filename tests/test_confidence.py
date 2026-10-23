@@ -40,10 +40,10 @@ def test_anomaly_confidence_all_green():
         total_delta=-40.0,
         sigma_rel=0.03,
     )
-    assert res["verdict"]["label_zh"] == "高置信"
+    assert res["verdict"]["label_zh"] == "high confidence"
     assert res["verdict"]["n_fail"] == 0
     names = [c["name_zh"] for c in res["checks"]]
-    assert "窗口显著性" in names and "极端值依赖（留一）" in names
+    assert "window significance" in names and "outlier dependence (leave-one-out)" in names
 
 
 def test_anomaly_confidence_flags_insignificant_window():
@@ -110,10 +110,10 @@ def test_experiment_confidence_card():
     perm = {"p_perm": 0.004}
     cuped = {"rel_lift": 0.058, "variance_reduction": 0.41}
     res = experiment_confidence(srm, primary, cuped, {"metric": "revenue_per_user"}, [], perm)
-    assert res["verdict"]["label_zh"] == "高置信"
+    assert res["verdict"]["label_zh"] == "high confidence"
     # Ratio metrics get a WARN note instead of a fake permutation check.
     res2 = experiment_confidence(srm, primary, None, None, [], None)
-    assert any("置换" in c["name_zh"] and c["status"] == WARN for c in res2["checks"])
+    assert any("permutation" in c["name_zh"] and c["status"] == WARN for c in res2["checks"])
 
 
 # ---------------------------------------------------------------- DiD
@@ -167,7 +167,7 @@ def test_matching_confidence_assembles_checks():
     aipw = {"estimate": 12.2}
     res = matching_confidence(psm, {}, aipw)
     names = [c["name_zh"] for c in res["checks"]]
-    assert "匹配后协变量平衡" in names and "隐性混淆提示" in names
+    assert "post-match covariate balance" in names and "hidden-confounding caveat" in names
     assert res["verdict"]["n_fail"] == 0
 
 

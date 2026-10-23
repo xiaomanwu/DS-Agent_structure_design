@@ -31,16 +31,16 @@ def weekday_profile_handler(question: str, slots: dict) -> AgentReply:
         f"FROM {table.name} GROUP BY 1 ORDER BY 1"
     )
     df = agent.sql.run(sql).dataframe  # noqa: F821 - bound below before any call
-    names_zh = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
-    df["weekday"] = df["dow"].map(lambda i: names_zh[int(i)])
+    weekday_names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    df["weekday"] = df["dow"].map(lambda i: weekday_names[int(i)])
     best = df.loc[df["value"].idxmax()]
     worst = df.loc[df["value"].idxmin()]
     spread = float(best["value"]) / float(worst["value"]) - 1 if float(worst["value"]) else float("nan")
     text = (
-        f"**{metric.name}** 的星期效应：最强为 {best['weekday']}（{_fmt_num(float(best['value']))}），"
-        f"最弱为 {worst['weekday']}（{_fmt_num(float(worst['value']))}），峰谷差 {spread:+.1%}。\n\n"
-        f"该能力由运行时注册的自定义扩展提供（见 examples/04_custom_extension.py），"
-        f"与内置能力同样参与路由、规划与报告。"
+        f"**{metric.name}** weekday effect: strongest on {best['weekday']} ({_fmt_num(float(best['value']))}), "
+        f"weakest on {worst['weekday']} ({_fmt_num(float(worst['value']))}), peak-to-trough spread {spread:+.1%}.\n\n"
+        f"This capability is provided by a custom extension registered at runtime (see examples/04_custom_extension.py); "
+        f"it routes, plans and reports like any built-in capability."
     )
     block = {
         "type": "table",

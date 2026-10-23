@@ -76,7 +76,7 @@ def test_design_document_contains_the_essentials():
     assert result["duration"]["recommended_days"] % 7 == 0
     assert any("SRM" in p for p in result["analysis_plan"])
     assert result["decision_rule"]
-    assert "实验设计" in result["markdown"]
+    assert "Experiment design" in result["markdown"]
 
 
 def test_recommend_experiment_type_matches_context():

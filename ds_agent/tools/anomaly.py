@@ -584,11 +584,11 @@ class AnomalyDetector:
         if not episodes:
             return f"No anomaly detected for {label} (max |z| = {frame['z'].abs().max():.2f})."
         top = episodes[0]
-        direction_cn = "高于" if top["direction"] == "up" else "低于"
+        direction_word = "above" if top["direction"] == "up" else "below"
         text = (
             f"{label}: {len(episodes)} anomaly episode(s). Largest: {top['start']}~{top['end']} "
             f"({top['days']}d, {top['kind']}) actual {top['actual_sum']:,.0f} vs expected {top['expected_sum']:,.0f}, "
-            f"{direction_cn} expected by {abs(top['impact_pct']):.1%}, "
+            f"{direction_word} expected by {abs(top['impact_pct']):.1%}, "
             f"p={top['p_value']:.4f}, severity={top['severity']}."
         )
         if shifts:

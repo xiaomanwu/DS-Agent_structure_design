@@ -4,21 +4,21 @@ Standard A/B readouts assume independent units, one randomisation layer and a
 stable treatment over time. None of those hold for the designs below, and using
 the standard test on them is how teams ship noise:
 
-* ``analyze_switchback``      - 时间片轮转实验: treatment alternates by time
+* ``analyze_switchback``      - switchback: treatment alternates by time
   block, so observations are serially correlated and the unit of inference is
   the block, not the user. Uses HAC standard errors plus a paired block
   comparison, and reports carryover explicitly.
-* ``analyze_reverse``         - 反转实验: arms are swapped halfway through. The
+* ``analyze_reverse``         - reversal: arms are swapped halfway through. The
   reversal separates a real treatment effect from instrumentation drift and
   measures novelty decay; a symmetric sign flip is the strongest cheap evidence
   that the effect is causal.
-* ``analyze_nested_experiment`` - 父子实验 / 正交分层: a child experiment runs
+* ``analyze_nested_experiment`` - parent-child / orthogonal layers: a child experiment runs
   inside a parent experiment's arm. Checks layer orthogonality, then estimates
   the child effect with parent fixed effects and tests the interaction.
-* ``analyze_two_sided``       - 双边实验: marketplace experiments where treating
+* ``analyze_two_sided``       - two-sided: marketplace experiments where treating
   one side spills onto the other. Estimates direct, cross-side and interaction
   effects with a market-level cluster bootstrap.
-* ``sensitivity_analysis``    - 敏感性分析: re-estimates the same effect under
+* ``sensitivity_analysis``    - sensitivity analysis: re-estimates the same effect under
   winsorising, trimming, transformations, CUPED, bootstrap and an A/A placebo,
   so a conclusion that only survives one specification is visibly fragile.
 
@@ -283,12 +283,11 @@ def analyze_switchback(
     )
     narrative = _tr(
         "zh",
-        f"时间片轮转：HAC 回归效应 {tau:+.4g}（相对 {tau / ctrl_mean:+.2%}，95% CI {ci_values[0]:+.4g}..{ci_values[1]:+.4g}，"
-        f"p={p_value:.4f}），{blocks} 个时间块 / {n_obs} 个时间点。残差一阶自相关 {rho:+.2f}，"
-        f"{'必须用 HAC 或块级标准误' if abs(rho) > 0.3 else '自相关较弱'}；"
-        f"配对块估计 {paired['mean_diff']:+.4g}（{paired['n_pairs']} 对），"
-        f"{'与回归一致' if agreement else '与回归不一致，需检查 washout 与块长'}。"
-        + ("检测到延续效应，建议加长 washout。" if carryover["detected"] else ""),
+        f"Switchback: HAC effect {tau:+.4g} ({tau / ctrl_mean:+.2%} relative, 95% CI {ci_values[0]:+.4g}..{ci_values[1]:+.4g}, "
+        f"p={p_value:.4f}) over {blocks} blocks / {n_obs} time points. Residual lag-1 autocorrelation {rho:+.2f}; "
+        f"paired-block estimate {paired['mean_diff']:+.4g} across {paired['n_pairs']} pairs, "
+        f"{'consistent with the regression' if agreement else 'inconsistent - check washout and block length'}. "
+        + ("Carryover detected, lengthen the washout." if carryover["detected"] else ""),
         f"Switchback: HAC effect {tau:+.4g} ({tau / ctrl_mean:+.2%} relative, 95% CI {ci_values[0]:+.4g}..{ci_values[1]:+.4g}, "
         f"p={p_value:.4f}) over {blocks} blocks / {n_obs} time points. Residual lag-1 autocorrelation {rho:+.2f}; "
         f"paired-block estimate {paired['mean_diff']:+.4g} across {paired['n_pairs']} pairs, "
@@ -397,11 +396,13 @@ def analyze_reverse(
     base = per_phase[1]["control_mean"]
     narrative = _tr(
         "zh",
-        f"反转实验：第一期效应 {tau1:+.4g}（p={per_phase[1]['p_value']:.4f}），互换后第二期 {tau2:+.4g}"
-        f"（p={per_phase[2]['p_value']:.4f}），"
-        + ("方向反转，" if reversal else "方向未反转，")
-        + f"对称性检验 p={sum_test['p_value']:.3f}（{'效应可逆，非埋点漂移' if sum_test['p_value'] > 0.05 else '两期不对称，可能存在新奇效应或污染'}）。"
-        f"持续性 {persistence:.2f}，合并估计 {pooled:+.4g}（相对 {pooled / base:+.2%}，p={pooled_test['p_value']:.4f}）。",
+        f"Reversal: phase 1 effect {tau1:+.4g} (p={per_phase[1]['p_value']:.4f}), phase 2 {tau2:+.4g} "
+        f"(p={per_phase[2]['p_value']:.4f}); "
+        + ("the sign flips, " if reversal else "the sign does not flip, ")
+        + f"symmetry test p={sum_test['p_value']:.3f} "
+        + ("(reversible effect, not instrumentation drift)" if sum_test["p_value"] > 0.05 else "(asymmetric - novelty or contamination)")
+        + f". Persistence {persistence:.2f}, pooled estimate {pooled:+.4g} ({pooled / base:+.2%} relative, "
+        f"p={pooled_test['p_value']:.4f}).",
         f"Reversal: phase 1 effect {tau1:+.4g} (p={per_phase[1]['p_value']:.4f}), phase 2 {tau2:+.4g} "
         f"(p={per_phase[2]['p_value']:.4f}); "
         + ("the sign flips, " if reversal else "the sign does not flip, ")
@@ -535,10 +536,11 @@ def analyze_nested_experiment(
 
     narrative = _tr(
         lang,
-        f"父子实验：父子层{'正交' if orthogonal else '不正交'}（卡方 p={chi_p:.4f}），"
-        f"子实验朴素效应 {naive['rel_lift']:+.2%}（p={naive['p_value']:.4f}），"
-        + (f"控制父实验后 {adjusted['effect'] / naive['control_mean']:+.2%}（p={adjusted['p_value']:.4f}），" if adjusted else "")
-        + f"父x子交互 {'显著' if interaction['detected'] else '不显著'}（p={interaction['p_value']:.3f}）；最小单元格 {min_cell:,}。",
+        f"Parent-child: layers are {'orthogonal' if orthogonal else 'NOT orthogonal'} (chi-square p={chi_p:.4f}); "
+        f"naive child effect {naive['rel_lift']:+.2%} (p={naive['p_value']:.4f}), "
+        + (f"parent-adjusted {adjusted['effect'] / naive['control_mean']:+.2%} (p={adjusted['p_value']:.4f}), " if adjusted else "")
+        + f"parent x child interaction {'significant' if interaction['detected'] else 'not significant'} "
+        f"(p={interaction['p_value']:.3f}); smallest cell {min_cell:,}.",
         f"Parent-child: layers are {'orthogonal' if orthogonal else 'NOT orthogonal'} (chi-square p={chi_p:.4f}); "
         f"naive child effect {naive['rel_lift']:+.2%} (p={naive['p_value']:.4f}), "
         + (f"parent-adjusted {adjusted['effect'] / naive['control_mean']:+.2%} (p={adjusted['p_value']:.4f}), " if adjusted else "")
@@ -663,9 +665,9 @@ def analyze_two_sided(
         """
         if zh:
             return (
-                f"{res['metric']}：买家侧干预 {res['buyer_direct']:+.4g}、"
-                f"卖家侧干预 {res['seller_direct']:+.4g}、"
-                f"交互 {res['interaction']:+.4g}（p={res['interaction_p']:.3f}）"
+                f"{res['metric']}: buyer-side {res['buyer_direct']:+.4g}, "
+                f"seller-side {res['seller_direct']:+.4g}, "
+                f"interaction {res['interaction']:+.4g} (p={res['interaction_p']:.3f})"
             )
         return (
             f"{res['metric']}: buyer-side {res['buyer_direct']:+.4g}, "
@@ -673,12 +675,12 @@ def analyze_two_sided(
             f"interaction {res['interaction']:+.4g} (p={res['interaction_p']:.3f})"
         )
 
-    cell_text_zh = "、".join(f"{k}={v}" for k, v in market_cells.items())
+    cell_text_zh = "; ".join(f"{k}={v}" for k, v in market_cells.items())
     narrative = _tr(
         lang,
-        "双边实验（按市场聚类自助法）："
-        + "；".join(_metric_summary(res, True) for res in results.values())
-        + f"。四个单元格的市场数：{cell_text_zh}。",
+        "Two-sided design (market-cluster bootstrap): "
+        + "; ".join(_metric_summary(res, True) for res in results.values())
+        + f". Markets per cell: {cell_text_zh}.",
         "Two-sided design (market-cluster bootstrap): "
         + "; ".join(_metric_summary(res, False) for res in results.values())
         + f". Markets per cell: {market_cells}.",
@@ -770,7 +772,7 @@ def sensitivity_analysis(
             }
         )
 
-    add(_tr(lang, "基准（Welch）" if kind == "mean" else "基准（两比例 z）",
+    add(_tr(lang, "baseline (Welch)" if kind == "mean" else "baseline (two-proportion z)",
             "baseline (Welch)" if kind == "mean" else "baseline (two-proportion z)"), ctrl, trt)
 
     # Segment-adjusted estimate: a legitimate specification for either metric
@@ -782,8 +784,8 @@ def sensitivity_analysis(
             base_mean = float(work.loc[work["_treat"] == 0, "_y"].mean())
             specs.append(
                 {
-                    "spec": _tr(lang, "分层调整", "segment-adjusted"),
-                    "note": _tr(lang, f"按 {segment_col} 固定效应调整", f"fixed effects on {segment_col}"),
+                    "spec": _tr(lang, "segment-adjusted", "segment-adjusted"),
+                    "note": _tr(lang, f"fixed effects on {segment_col}", f"fixed effects on {segment_col}"),
                     "control_mean": base_mean,
                     "treatment_mean": base_mean + coef,
                     "abs_diff": coef,
@@ -799,28 +801,28 @@ def sensitivity_analysis(
     if kind == "mean":
         # Winsorising the top 0.5%: the standard defence against a single whale.
         lo, hi = np.nanquantile(np.concatenate([ctrl, trt]), [0.005, 0.995])
-        add(_tr(lang, "缩尾 0.5%", "winsorise 0.5%"), np.clip(ctrl, lo, hi), np.clip(trt, lo, hi))
+        add(_tr(lang, "winsorise 0.5%", "winsorise 0.5%"), np.clip(ctrl, lo, hi), np.clip(trt, lo, hi))
 
         # Trimming both tails changes the estimand, so it is a stress test only.
         lo, hi = np.nanquantile(np.concatenate([ctrl, trt]), [0.01, 0.99])
         add(
-            _tr(lang, "截尾 1%", "trim 1%"),
+            _tr(lang, "trim 1%", "trim 1%"),
             ctrl[(ctrl >= lo) & (ctrl <= hi)],
             trt[(trt >= lo) & (trt <= hi)],
-            note=_tr(lang, "估计量变为截尾均值", "estimand changes to the trimmed mean"),
+            note=_tr(lang, "estimand changes to the trimmed mean", "estimand changes to the trimmed mean"),
         )
 
         # Drop the top 1% of users (the "is it one big customer?" test).
         cutoff = np.nanquantile(np.concatenate([ctrl, trt]), 0.99)
         add(
-            _tr(lang, "剔除头部 1%", "drop top 1%"),
+            _tr(lang, "drop top 1%", "drop top 1%"),
             ctrl[ctrl < cutoff],
             trt[trt < cutoff],
-            note=_tr(lang, "用户级截断", "user-level truncation"),
+            note=_tr(lang, "user-level truncation", "user-level truncation"),
         )
 
         if (ctrl >= 0).all() and (trt >= 0).all():
-            add(_tr(lang, "log1p 变换", "log1p transform"), np.log1p(ctrl), np.log1p(trt))
+            add(_tr(lang, "log1p transform", "log1p transform"), np.log1p(ctrl), np.log1p(trt))
 
     if covariate:
         y_all = work["_y"].to_numpy(dtype=float)
@@ -833,15 +835,15 @@ def sensitivity_analysis(
             _tr(lang, "CUPED", "CUPED"),
             adj_c,
             adj_t,
-            note=_tr(lang, f"theta={adj['theta']:.3f}，方差缩减 {adj['variance_reduction']:.0%}", f"theta={adj['theta']:.3f}, VR={adj['variance_reduction']:.0%}"),
+            note=_tr(lang, f"theta={adj['theta']:.3f}, VR={adj['variance_reduction']:.0%}", f"theta={adj['theta']:.3f}, VR={adj['variance_reduction']:.0%}"),
         )
 
     # Bootstrap CI: does the conclusion depend on the normal approximation?
     boot = inf.bootstrap_diff_in_means(ctrl, trt, n_boot=n_boot, alpha=alpha)
     specs.append(
         {
-            "spec": _tr(lang, "Bootstrap 置信区间", "bootstrap CI"),
-            "note": _tr(lang, f"{n_boot} 次重抽样", f"{n_boot} resamples"),
+            "spec": _tr(lang, "bootstrap CI", "bootstrap CI"),
+            "note": _tr(lang, f"{n_boot} resamples", f"{n_boot} resamples"),
             "control_mean": float(np.mean(ctrl)),
             "treatment_mean": float(np.mean(trt)),
             "abs_diff": float(np.mean(trt) - np.mean(ctrl)),
@@ -885,17 +887,16 @@ def sensitivity_analysis(
     sig_count = int(frame["significant"].sum())
     spread = float(np.max(lifts) - np.min(lifts)) if len(lifts) else float("nan")
     if sign_stable and sig_count >= max(2, len(frame) - 2):
-        verdict = _tr(lang, "结论稳健：多数设定下同向且显著。", "Robust: consistent sign and significance across most specifications.")
+        verdict = _tr(lang, "Robust: consistent sign and significance across most specifications.", "Robust: consistent sign and significance across most specifications.")
     elif sign_stable:
-        verdict = _tr(lang, "方向稳健但显著性不稳：不要只报告最有利的设定。", "Sign is stable but significance is not: do not cherry-pick a specification.")
+        verdict = _tr(lang, "Sign is stable but significance is not: do not cherry-pick a specification.", "Sign is stable but significance is not: do not cherry-pick a specification.")
     else:
-        verdict = _tr(lang, "结论脆弱：不同设定下方向相反，需先查清原因再决策。", "Fragile: the sign flips across specifications; investigate before deciding.")
+        verdict = _tr(lang, "Fragile: the sign flips across specifications; investigate before deciding.", "Fragile: the sign flips across specifications; investigate before deciding.")
 
     narrative = _tr(
         lang,
-        f"敏感性分析：基准 {main['rel_lift']:+.2%}（p={main['p_value']:.4f}），"
-        f"{len(frame)} 种设定下 {sig_count} 个显著，极差 {spread:.2%}，"
-        f"A/A 安慰剂假阳性率 {placebo_rate:.0%}。{verdict}",
+        f"Sensitivity: baseline {main['rel_lift']:+.2%} (p={main['p_value']:.4f}); {sig_count} of {len(frame)} "
+        f"specifications significant, spread {spread:.2%}, A/A placebo false-positive rate {placebo_rate:.0%}. {verdict}",
         f"Sensitivity: baseline {main['rel_lift']:+.2%} (p={main['p_value']:.4f}); {sig_count} of {len(frame)} "
         f"specifications significant, spread {spread:.2%}, A/A placebo false-positive rate {placebo_rate:.0%}. {verdict}",
     )

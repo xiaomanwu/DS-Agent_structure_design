@@ -281,7 +281,7 @@ def arima_intervention(
     # ---- specification curve: is the answer an artefact of these choices? ----
     spec_rows: List[Dict[str, object]] = [
         {
-            "spec": _tr(lang, "主口径", "main specification"),
+            "spec": _tr(lang, "main specification", "main specification"),
             "relative": relative,
             "p_value": p_value,
             "note": f"order={used_order}, seasonal={used_seasonal or '-'}, log={use_log}",
@@ -319,10 +319,10 @@ def arima_intervention(
         except Exception:  # noqa: BLE001 - a spec that will not converge is not reported
             return
 
-    _variant("去掉线性趋势", "no linear trend", trend=False)
-    _variant("去掉星期因子", "no day-of-week terms", seasonal_dummies=False)
+    _variant("no linear trend", "no linear trend", trend=False)
+    _variant("no day-of-week terms", "no day-of-week terms", seasonal_dummies=False)
     _variant(
-        "原值尺度季节ARIMA",
+        "seasonal ARIMA on the raw scale",
         "seasonal ARIMA on the raw scale",
         order=(1, 1, 1),
         seasonal_order=(0, 1, 1, _WEEK),
@@ -330,7 +330,7 @@ def arima_intervention(
         seasonal_dummies=False,
         scale="level",
     )
-    _variant("另一尺度", "other scale", scale="level" if use_log else "log")
+    _variant("other scale", "other scale", scale="level" if use_log else "log")
     spec_table = pd.DataFrame(spec_rows)
 
     # ---- placebo interventions: how big a "step" appears where nothing happened? ----
@@ -391,13 +391,14 @@ def arima_intervention(
     spread = spec_table["relative"].astype(float)
     narrative = _tr(
         lang,
-        f"中断时间序列（{'对数' if use_log else '原值'}尺度，{'趋势' if trend else '无趋势'}"
-        f"{'+星期因子' if seasonal_dummies else ''}，ARMA{used_order}）：干预后水平位移 "
-        f"{effect:+,.0f}（相对 {relative:+.2%}，95% CI {ci[0]:+,.0f}..{ci[1]:+,.0f}，p={p_value:.2e}）；"
-        f"实际均值 {post_mean:,.0f} vs 干预前 {pre_mean:,.0f}。"
-        f"口径敏感性：{len(spec_table)} 种设定下相对效应 {spread.min():+.1%}..{spread.max():+.1%}；"
-        f"残差 Ljung-Box p={ljung_p:.3f}（{'残差已白噪声' if ljung_p > 0.05 else '残差仍有自相关，标准误偏小'}）；"
-        f"安慰剂检验 p={placebo_p:.3f}（{len(placebo_effects)} 个假干预日）。",
+        f"ARIMA ITS ({'log' if use_log else 'level'} scale, {'with' if trend else 'no'} trend"
+        f"{', day-of-week terms' if seasonal_dummies else ''}, ARMA{used_order}): post-period level shift "
+        f"{effect:+,.0f} ({relative:+.2%} relative, 95% CI {ci[0]:+,.0f}..{ci[1]:+,.0f}, p={p_value:.2e}); "
+        f"actual mean {post_mean:,.0f} vs pre-period {pre_mean:,.0f}. "
+        f"Specification sensitivity: {spread.min():+.1%}..{spread.max():+.1%} across {len(spec_table)} designs; "
+        f"residual Ljung-Box p={ljung_p:.3f} "
+        f"({'residuals are white noise' if ljung_p > 0.05 else 'residual autocorrelation remains, SE is too small'}); "
+        f"placebo p={placebo_p:.3f} ({len(placebo_effects)} fake intervention dates).",
         f"ARIMA ITS ({'log' if use_log else 'level'} scale, {'with' if trend else 'no'} trend"
         f"{', day-of-week terms' if seasonal_dummies else ''}, ARMA{used_order}): post-period level shift "
         f"{effect:+,.0f} ({relative:+.2%} relative, 95% CI {ci[0]:+,.0f}..{ci[1]:+,.0f}, p={p_value:.2e}); "
@@ -633,15 +634,15 @@ def causal_impact(
 
     caveat = _tr(
         lang,
-        "" if control_cols else "注意：无控制序列时，干预日附近的一次持续性冲击与真实效应观测量上不可区分，请优先补齐对照序列。",
+        "" if control_cols else " Caveat: without control series a persistent shock near the cutoff is observationally equivalent to the effect - add controls before trusting this.",
         "" if control_cols else " Caveat: without control series a persistent shock near the cutoff is observationally equivalent to the effect - add controls before trusting this.",
     )
     narrative = _tr(
         lang,
-        f"时序因果（结构时间序列，{'对数' if use_log else '原值'}尺度，"
-        f"{'含' if control_cols else '无'}控制序列）：干预后平均效应 {avg_effect:+,.0f}"
-        f"（相对 {relative:+.2%}，模型 p={p_value:.2e}，安慰剂 p={placebo_p:.3f}），累计 {cumulative:+,.0f}；"
-        f"干预前一步拟合 R²={pre_r2:.3f}、RMSE={pre_rmse:,.0f}。{caveat}",
+        f"Causal impact (structural model, {'log' if use_log else 'level'} scale, "
+        f"{'with' if control_cols else 'without'} controls): post-period average effect "
+        f"{avg_effect:+,.0f} ({relative:+.2%}, model p={p_value:.2e}, placebo p={placebo_p:.3f}), "
+        f"cumulative {cumulative:+,.0f}; pre-period one-step fit R²={pre_r2:.3f}, RMSE={pre_rmse:,.0f}.{caveat}",
         f"Causal impact (structural model, {'log' if use_log else 'level'} scale, "
         f"{'with' if control_cols else 'without'} controls): post-period average effect "
         f"{avg_effect:+,.0f} ({relative:+.2%}, model p={p_value:.2e}, placebo p={placebo_p:.3f}), "
@@ -701,19 +702,19 @@ def compare_ts_methods(
 
     rows = [
         {
-            "method": _tr(lang, "前后均值差（未校正）", "naive pre/post difference"),
+            "method": _tr(lang, "naive pre/post difference", "naive pre/post difference"),
             "effect": naive,
             "relative": naive_relative,
             "p_value": float("nan"),
         },
         {
-            "method": _tr(lang, "ARIMA 中断时间序列", "ARIMA interrupted time series"),
+            "method": _tr(lang, "ARIMA interrupted time series", "ARIMA interrupted time series"),
             "effect": its["effect"],
             "relative": its["relative"],
             "p_value": its["p_value"],
         },
         {
-            "method": _tr(lang, "时序因果（结构模型）", "causal impact (structural)"),
+            "method": _tr(lang, "causal impact (structural)", "causal impact (structural)"),
             "effect": impact["effect"],
             "relative": impact["relative"],
             "p_value": impact["p_value"],
@@ -733,10 +734,10 @@ def compare_ts_methods(
         "agree": agree,
         "narrative": _tr(
             lang,
-            f"三种口径：未校正前后差 {naive:+,.0f}（{naive_relative:+.1%}），ARIMA ITS {its['effect']:+,.0f}"
-            f"（{its['relative']:+.1%}），结构时序 {impact['effect']:+,.0f}（{impact['relative']:+.1%}）；"
-            f"两个模型{'一致' if agree else '不一致，需要检查控制序列与干预日'}。"
-            f"未校正口径把趋势算作效应，通常明显高估。",
+            f"Three readings: naive {naive:+,.0f} ({naive_relative:+.1%}), ARIMA ITS {its['effect']:+,.0f} "
+            f"({its['relative']:+.1%}), structural {impact['effect']:+,.0f} ({impact['relative']:+.1%}); "
+            f"the two models {'agree' if agree else 'disagree - inspect the controls and the intervention date'}. "
+            f"The naive reading bills the underlying trend to the intervention, so it overstates by construction.",
             f"Three readings: naive {naive:+,.0f} ({naive_relative:+.1%}), ARIMA ITS {its['effect']:+,.0f} "
             f"({its['relative']:+.1%}), structural {impact['effect']:+,.0f} ({impact['relative']:+.1%}); "
             f"the two models {'agree' if agree else 'disagree - inspect the controls and the intervention date'}. "
