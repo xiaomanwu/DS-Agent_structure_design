@@ -1,0 +1,71 @@
+{
+  "利润率": {
+    "name": "利润率",
+    "table": "orders_daily",
+    "numerator": "refund_amount",
+    "denominator": null,
+    "aliases": [
+      "利润率"
+    ],
+    "unit": "",
+    "higher_is_better": true,
+    "description": "gmv - refund_amount，分母 gmv",
+    "owner": "",
+    "formula_text": "gmv - refund_amount，分母 gmv",
+    "status": "active",
+    "created_at": "2026-10-23",
+    "updated_at": "2026-10-23",
+    "is_custom": true
+  },
+  "register_metric_profit_rate": {
+    "name": "register_metric_profit_rate",
+    "table": "orders_daily",
+    "numerator": "refund_amount",
+    "denominator": "gmv",
+    "aliases": [],
+    "unit": "%",
+    "higher_is_better": true,
+    "description": "(gmv - refund_amount) / gmv",
+    "owner": "",
+    "formula_text": "(gmv - refund_amount) / gmv",
+    "status": "deprecated",
+    "created_at": "2026-10-23",
+    "updated_at": "2026-10-23",
+    "is_custom": true,
+    "deprecation_reason": "下线指标 register_metric_profit_rate"
+  },
+  "profit_rate": {
+    "name": "profit_rate",
+    "table": "orders_daily",
+    "numerator": "refund_amount",
+    "denominator": "gmv",
+    "aliases": [],
+    "unit": "%",
+    "higher_is_better": true,
+    "description": "(gmv - refund_amount) / gmv",
+    "owner": "",
+    "formula_text": "(gmv - refund_amount) / gmv",
+    "status": "deprecated",
+    "created_at": "2026-10-23",
+    "updated_at": "2026-10-23",
+    "is_custom": true,
+    "deprecation_reason": "下线指标 profit_rate"
+  },
+  "aov_test2": {
+    "name": "aov_test2",
+    "table": "orders_daily",
+    "numerator": "gmv",
+    "denominator": "orders",
+    "aliases": [],
+    "unit": "%",
+    "higher_is_better": true,
+    "description": "gmv / orders",
+    "owner": "",
+    "formula_text": "gmv / orders",
+    "status": "deprecated",
+    "created_at": "2026-10-23",
+    "updated_at": "2026-10-23",
+    "is_custom": true,
+    "deprecation_reason": "下线指标 aov_test2"
+  }
+}

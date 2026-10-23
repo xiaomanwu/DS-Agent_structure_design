@@ -1,0 +1,10 @@
+{
+  "budget": {
+    "name": "budget",
+    "mode": "view",
+    "source_kind": "file",
+    "format": "csv",
+    "path": "/Users/wuxiaoman/WorkBuddy/2026-10-22-15-09-01/ds-agent/artifacts/core_demo_workspace/budget_2026H2.csv",
+    "registered_at": "2026-10-23"
+  }
+}

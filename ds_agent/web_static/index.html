@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DS Agent · 自然语言数据分析 / Analytics in Natural Language</title>
+<style>
+  :root{
+    --ink:#0b1526; --muted:#64748b; --line:#e6eaf2; --brand:#4f46e5; --brand-2:#7c3aed;
+    --brand-soft:#eef2ff; --brand-line:#c7d2fe; --up:#dc2626; --down:#16a34a;
+    --bg:#f4f6fb; --card:#ffffff; --soft:#f8fafc; --shadow-sm:0 1px 2px rgba(15,23,42,.05);
+    --shadow-md:0 4px 16px -2px rgba(15,23,42,.08), 0 1px 3px rgba(15,23,42,.05);
+    --shadow-lg:0 20px 50px -12px rgba(15,23,42,.25);
+    --grad:linear-gradient(135deg,#4f46e5,#7c3aed);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{margin:0;color:var(--ink);
+    background:
+      radial-gradient(1200px 500px at 85% -10%, rgba(124,58,237,.06), transparent 60%),
+      radial-gradient(900px 420px at -10% 0%, rgba(79,70,229,.07), transparent 55%),
+      var(--bg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:14px;line-height:1.65;-webkit-font-smoothing:antialiased;overflow:hidden;}
+  ::-webkit-scrollbar{width:9px;height:9px;}
+  ::-webkit-scrollbar-thumb{background:#d3dae6;border-radius:8px;border:2px solid transparent;background-clip:content-box;}
+  ::-webkit-scrollbar-thumb:hover{background:#b9c3d4;border:2px solid transparent;background-clip:content-box;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  .app{display:grid;grid-template-columns:272px 1fr;height:100vh;overflow:hidden;}
+  /* ------------------------------------------------ sidebar */
+  .side{background:linear-gradient(180deg,#ffffff, #fbfcff);border-right:1px solid var(--line);
+    padding:22px 16px 18px;overflow-y:auto;display:flex;flex-direction:column;}
+  .logo{display:flex;align-items:center;gap:11px;margin-bottom:8px;padding:0 4px;}
+  .logo .mark{width:34px;height:34px;border-radius:10px;background:var(--grad);color:#fff;
+    font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 14px -4px rgba(79,70,229,.5);}
+  .logo h1{font-size:15.5px;margin:0;letter-spacing:-.2px;}
+  .logo p{margin:0;font-size:11px;color:var(--muted);}
+  .side h2{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:#94a3b8;
+    margin:20px 6px 8px;font-weight:700;}
+  .cap{padding:8px 10px;border-radius:10px;font-size:12.5px;color:#475569;cursor:pointer;
+    border:1px solid transparent;transition:.15s;position:relative;}
+  .cap:hover{background:#fff;border-color:var(--line);box-shadow:var(--shadow-sm);transform:translateX(2px);}
+  .cap:active{transform:translateX(2px) scale(.98);}
+  .cap::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:3px;
+    background:var(--grad);opacity:0;transition:.15s;}
+  .cap:hover::before{opacity:1;}
+  .cap b{display:block;font-size:12.5px;color:var(--ink);font-weight:600;}
+  .cap span{color:var(--muted);font-size:11.5px;line-height:1.45;display:block;margin-top:1px;}
+  .ex{display:block;width:100%;text-align:left;background:var(--soft);border:1px solid var(--line);
+    border-radius:10px;padding:8px 11px;margin-bottom:7px;font-size:12px;color:#334155;cursor:pointer;
+    transition:.15s;font-family:inherit;line-height:1.5;}
+  .ex:hover{background:var(--brand-soft);border-color:var(--brand-line);color:#4338ca;
+    transform:translateY(-1px);box-shadow:0 4px 10px -4px rgba(79,70,229,.25);}
+  .foot{margin-top:auto;font-size:11px;color:var(--muted);border-top:1px solid var(--line);
+    padding-top:12px;line-height:1.7;}
+  /* ------------------------------------------------ main */
+  .main{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;}
+  .top{height:54px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 22px;background:rgba(255,255,255,.8);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);position:relative;z-index:5;}
+  .top::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;
+    background:linear-gradient(90deg,rgba(79,70,229,.35),rgba(124,58,237,.18),transparent 70%);}
+  .top .title{font-size:13px;font-weight:600;}
+  .top .title em{font-style:normal;color:var(--muted);font-weight:400;margin-left:8px;font-size:12px;}
+  .top-actions{display:flex;align-items:center;gap:8px;}
+  .status{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);
+    background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:4px 10px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.15);}
+  .dot.off{background:#94a3b8;box-shadow:0 0 0 3px rgba(148,163,184,.15);}
+  .ghost{border:1px solid var(--line);background:#fff;border-radius:9px;padding:5px 12px;font-size:12px;
+    color:#475569;cursor:pointer;font-family:inherit;transition:.15s;box-shadow:var(--shadow-sm);}
+  .ghost:hover{background:var(--soft);border-color:#cbd5e1;color:var(--ink);}
+  /* language toggle */
+  .lang{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;
+    background:#fff;box-shadow:var(--shadow-sm);}
+  .lang button{border:none;background:transparent;padding:5px 11px;font-size:12px;color:#64748b;cursor:pointer;
+    font-family:inherit;font-weight:600;transition:.15s;}
+  .lang button.on{background:var(--grad);color:#fff;}
+  /* ------------------------------------------------ chat */
+  .chat{flex:1;overflow-y:auto;min-height:0;padding:28px 0 10px;}
+  .wrap{max-width:880px;margin:0 auto;padding:0 24px;}
+  .msg{margin-bottom:28px;animation:rise .28s cubic-bezier(.2,.7,.3,1);}
+  @keyframes rise{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  .msg.user{display:flex;justify-content:flex-end;}
+  .bubble-user{background:var(--grad);color:#fff;padding:10px 15px;border-radius:16px 16px 5px 16px;
+    max-width:70%;font-size:13.5px;white-space:pre-wrap;box-shadow:0 6px 16px -6px rgba(79,70,229,.45);}
+  .who{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);margin-bottom:8px;}
+  .who .mark{width:20px;height:20px;border-radius:7px;background:var(--grad);color:#fff;font-size:10px;
+    display:flex;align-items:center;justify-content:center;font-weight:700;
+    box-shadow:0 3px 8px -2px rgba(79,70,229,.45);}
+  .answer{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;
+    box-shadow:var(--shadow-md);position:relative;overflow:hidden;}
+  .answer::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--brand),var(--brand-2),transparent 75%);opacity:.7;}
+  .answer p{margin:0 0 10px;}
+  .answer p:last-child{margin-bottom:0;}
+  .answer strong{color:#0b1220;font-weight:650;}
+  .answer code{background:#eef2f7;padding:1px 6px;border-radius:6px;font-size:12.5px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#312e81;border:1px solid #e2e8f0;}
+  .answer h3{font-size:14px;margin:14px 0 8px;}
+  .answer ol,.answer ul{margin:6px 0 10px;padding-left:20px;}
+  .answer li{margin:3px 0;}
+  /* capability intro card (sidebar card click) */
+  .cap-intro .cap-intro-brief{font-size:13px;font-weight:600;color:#312e81;margin-bottom:8px;}
+  .cap-intro .cap-intro-body{font-size:13px;color:#475569;line-height:1.6;margin-bottom:12px;}
+  .cap-intro .cap-intro-body p{margin:0;}
+  .cap-intro .cap-intro-ex{font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+    color:#94a3b8;margin-bottom:6px;font-weight:700;}
+  .cap-intro .ex{margin-bottom:0;}
+  /* kpi */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:6px 0 16px;}
+  .kpi{border:1px solid var(--line);border-radius:12px;padding:12px 14px 11px;background:#fff;
+    box-shadow:var(--shadow-sm);position:relative;overflow:hidden;transition:.15s;}
+  .kpi:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
+  .kpi::before{content:"";position:absolute;top:0;left:0;right:0;height:2.5px;background:var(--grad);opacity:.55;}
+  .kpi.good::before{background:var(--up);opacity:.75;}
+  .kpi.bad::before{background:var(--down);opacity:.75;}
+  .kpi .lbl{font-size:11px;color:var(--muted);margin-bottom:3px;}
+  .kpi .val{font-size:20px;font-weight:700;letter-spacing:-.4px;font-variant-numeric:tabular-nums;}
+  .kpi.good .val{color:var(--up);}
+  .kpi.bad .val{color:var(--down);}
+  .kpi .sub{font-size:11px;color:var(--muted);margin-top:2px;}
+  /* table */
+  .tbl-wrap{margin:6px 0 16px;border:1px solid var(--line);border-radius:12px;overflow:auto;
+    max-height:340px;box-shadow:var(--shadow-sm);background:#fff;}
+  .tbl-title{font-size:11.5px;color:#475569;padding:9px 13px;background:linear-gradient(180deg,#fbfcff,#f6f8fc);
+    border-bottom:1px solid var(--line);font-weight:600;position:sticky;top:0;z-index:2;}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;}
+  th{background:#f8fafc;text-align:left;font-weight:600;color:#475569;padding:7px 13px;
+    border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:27px;z-index:1;}
+  td{padding:6.5px 13px;border-bottom:1px solid #f1f5f9;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  tbody tr:nth-child(even) td{background:#fafbfe;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:#f4f6ff;}
+  .chart{margin:6px 0 16px;}
+  .chart img{width:100%;border:1px solid var(--line);border-radius:12px;display:block;box-shadow:var(--shadow-sm);}
+  .chart .cap{font-size:11.5px;color:var(--muted);margin-top:6px;}
+  .artifacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  .artifacts a{font-size:12px;color:#4338ca;text-decoration:none;border:1px solid var(--brand-line);
+    background:var(--brand-soft);padding:5px 11px;border-radius:999px;transition:.15s;font-weight:500;}
+  .artifacts a:hover{background:#e0e7ff;transform:translateY(-1px);box-shadow:0 4px 10px -4px rgba(79,70,229,.3);}
+  /* composer */
+  .composer{border-top:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.6),rgba(255,255,255,.95));
+    backdrop-filter:blur(8px);padding:14px 0 18px;}
+  .input-row{display:flex;gap:10px;align-items:flex-end;background:#fff;border:1px solid var(--line);
+    border-radius:16px;padding:10px 10px 10px 16px;box-shadow:var(--shadow-md);transition:.15s;}
+  .input-row:focus-within{border-color:var(--brand-line);
+    box-shadow:0 0 0 4px rgba(79,70,229,.1), var(--shadow-md);}
+  textarea{flex:1;border:none;outline:none;resize:none;font-family:inherit;font-size:13.5px;
+    line-height:1.6;max-height:120px;padding:3px 0;color:var(--ink);background:transparent;}
+  .send{background:var(--grad);color:#fff;border:none;border-radius:11px;width:36px;height:36px;
+    cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 5px 12px -4px rgba(79,70,229,.5);transition:.15s;}
+  .send:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 7px 16px -4px rgba(79,70,229,.55);}
+  .send:disabled{opacity:.45;cursor:default;box-shadow:none;}
+  .hint{font-size:11px;color:var(--muted);margin-top:9px;text-align:center;}
+  .typing{display:inline-flex;gap:4px;align-items:center;color:var(--muted);font-size:12.5px;}
+  .typing i{width:5px;height:5px;border-radius:50%;background:#a5b4fc;animation:blink 1.2s infinite;}
+  .typing i:nth-child(2){animation-delay:.2s;}
+  .typing i:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,80%,100%{opacity:.25;}40%{opacity:1;}}
+  .err{color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:10px 13px;font-size:12.5px;}
+  /* settings modal */
+  .overlay{position:fixed;inset:0;background:rgba(11,21,38,.4);backdrop-filter:blur(3px);display:none;
+    align-items:center;justify-content:center;z-index:50;}
+  .overlay.open{display:flex;}
+  .modal{background:#fff;border-radius:20px;width:440px;max-width:92vw;padding:24px 26px;
+    box-shadow:var(--shadow-lg);animation:rise .22s ease;}
+  .modal h3{margin:0 0 4px;font-size:15.5px;}
+  .modal .sub{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:5px;font-weight:600;}
+  .field input{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 11px;
+    font-size:13px;font-family:inherit;color:var(--ink);outline:none;transition:.15s;}
+  .field input:focus{border-color:var(--brand-line);box-shadow:0 0 0 4px rgba(79,70,229,.1);}
+  .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;align-items:center;}
+  .btn{border:none;border-radius:10px;padding:8px 15px;font-size:12.5px;cursor:pointer;font-family:inherit;
+    font-weight:600;transition:.15s;}
+  .btn.primary{background:var(--grad);color:#fff;box-shadow:0 4px 12px -4px rgba(79,70,229,.5);}
+  .btn.primary:hover{transform:translateY(-1px);}
+  .btn.plain{background:#f1f5f9;color:#475569;}
+  .btn.plain:hover{background:#e2e8f0;}
+  .llm-msg{font-size:12px;margin-top:10px;min-height:16px;}
+  .llm-msg.ok{color:#15803d;}
+  .llm-msg.bad{color:#b91c1c;}
+  @media(max-width:860px){.app{grid-template-columns:1fr;}.side{display:none;}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="logo">
+      <div class="mark">DS</div>
+      <div><h1>DS Agent</h1><p id="side-tagline"></p></div>
+    </div>
+    <h2 id="side-caps-title"></h2>
+    <div id="caps"></div>
+    <h2 id="side-ex-title"></h2>
+    <div id="examples"></div>
+    <div class="foot" id="side-foot"></div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <div class="title" id="top-title"></div>
+      <div class="top-actions">
+        <div class="lang">
+          <button id="btn-zh" onclick="setLang('zh')">中文</button>
+          <button id="btn-en" onclick="setLang('en')">EN</button>
+        </div>
+        <div class="status"><span class="dot" id="llm-dot"></span><span id="llm-status-text"></span></div>
+        <button class="ghost" id="btn-settings" onclick="openSettings()">⚙︎ <span data-i18n="settings"></span></button>
+        <button class="ghost" id="btn-clear" onclick="resetChat()"></button>
+      </div>
+    </div>
+
+    <div class="chat" id="chat">
+      <div class="wrap" id="messages"></div>
+    </div>
+
+    <div class="composer">
+      <div class="wrap">
+        <div class="input-row">
+          <textarea id="input" rows="1"></textarea>
+          <button class="send" id="send" onclick="send()">↑</button>
+        </div>
+        <div class="hint" id="hint"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- LLM settings -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 data-i18n="settings-title"></h3>
+    <div class="sub" data-i18n="settings-sub"></div>
+    <div class="field">
+      <label data-i18n="field-base"></label>
+      <input id="cfg-base" placeholder="https://api.openai.com/v1">
+    </div>
+    <div class="field">
+      <label data-i18n="field-key"></label>
+      <input id="cfg-key" type="password" placeholder="sk-...">
+    </div>
+    <div class="field">
+      <label data-i18n="field-model"></label>
+      <input id="cfg-model" placeholder="gpt-4o-mini">
+    </div>
+    <div class="modal-actions">
+      <button class="btn plain" id="btn-test" onclick="testLLM()" data-i18n="test"></button>
+      <button class="btn plain" onclick="closeSettings()" data-i18n="cancel"></button>
+      <button class="btn primary" onclick="saveLLM()" data-i18n="save"></button>
+    </div>
+    <div class="llm-msg" id="llm-msg"></div>
+  </div>
+</div>
+
+<script>
+const I18N = {
+  zh: {
+    tagline: "自然语言数据分析",
+    capsTitle: "能力 · 点击查看介绍", exTitle: "试着问",
+    foot: "内置演示数仓 · DuckDB<br>SQL / 异常 / 归因 / 实验 / 因果",
+    topTitle: '对话 <em>自然语言即可，追问会继承上下文</em>',
+    settings: "模型", clear: "清空",
+    placeholder: "例如：近7天 GMV 为什么跌了？ / 看下这个 AB 实验的结果 / 设计一个转化率实验",
+    hint: "Enter 发送 · Shift+Enter 换行 · 输入 help 查看全部能力",
+    thinking: "分析中", ready: "就绪", error: "出错",
+    llmOn: "LLM 已连接", llmOff: "内置规则模式",
+    errPrefix: "出错了：",
+    settingsTitle: "大模型接口设置",
+    settingsSub: "配置任意 OpenAI 兼容接口（chat/completions）。配置后大模型负责：识别意图与编排任务流程（如「诊断→写报告」）、语义层之外的灵活 SQL 生成（只读护栏校验后执行）、在工具结果上生成最终报告解读，以及在需求超出能力范围时给出局限性判断与替代建议。不配置或调用失败时自动回退内置规则，全部功能不受影响。",
+    fieldBase: "Base URL", fieldKey: "API Key", fieldModel: "模型名称",
+    test: "测试连接", cancel: "取消", save: "保存",
+    saveOk: "已保存。", testOk: "连接成功：",
+    testFail: "连接失败：", noKey: "请先填写 API Key。",
+    capIntroTitle: "功能介绍", capIntroExample: "示例问题（点击填入输入框，再发送）",
+    caps: {
+      sql: ["SQL 查询", "语义层统一口径，只读、自动截断", "近30天各渠道的 GMV 和订单量是多少？",
+        "用自然语言问数，查询走统一语义层：指标口径（分子/分母）全局一致，只读执行、自动截断行数；支持时间窗口（近7天/近30天）与多维拆解。"],
+      diagnose: ["异动诊断", "异常识别 + 贡献度 + 多维归因", "近7天 GMV 为什么跌了？",
+        "对指标做完整异动诊断：季节性异常检测（STL / Holt-Winters / 自动基线回测）→ 逐维贡献度分解 → 多维归因定位根因，输出显著性判定与行动建议。"],
+      sampling: ["抽样调查", "样本量计算 / 分层抽样 / 代表性检验", "满意度调查基线70%，检测3个百分点变化，需要多少样本？",
+        "抽样调查工具箱：Cochran 公式计算比例/均值样本量（含效应大小敏感性表）、简单随机/系统/分层抽样（种子可复现、分层配额透明）、抽样分布与标准误、95% 置信区间，以及样本代表性检验（卡方拟合优度 / Welch t / KS）。"],
+      experiment_design: ["实验设计", "样本量/时效/检验方案，多种类型", "设计一个支付转化率实验，基线3%，希望检测2%的相对提升，每天5万流量",
+        "实验设计器：按基线、MDE（绝对/相对）、日流量与显著性水平计算每组样本量与实验时长；支持标准 A/B、AA、切换（switchback）等设计类型，并给出检验方案与注意事项。"],
+      experiment_analysis: ["实验分析", "SRM / CUPED / 多重比较 / 上线建议", "看下这个 AB 实验的结果",
+        "实验读数：SRM 样本比检查、CUPED 方差缩减、正态/Bootstrap 检验、多重比较校正（Bonferroni / Holm）、分段异质性拆解，最后给出明确的上线/不上线建议。"],
+      causal: ["因果推断", "DID / PSM / IPW / 合成控制", "用双重差分评估补贴政策对城市 GMV 的影响",
+        "因果推断方法族：双重差分（TWFE）、倾向得分匹配（PSM，含协变量共线性剪枝与平衡性检验）、逆概率加权（IPW）、AIPW、合成控制、断点回归（RDD）；输出效应估计、置信区间与稳健性检验，并可对因果模型做事后 SHAP 特征分析。"],
+      modeling: ["建模分析", "预处理 → 特征工程 → 模型 → SHAP", "训练分类模型预测用户是否转化",
+        "四段式建模流水线：① 数据预处理（缺失值/NaN 填补、稀疏/常量/重复列处理、缩尾）→ ② 特征工程（日期展开、独热编码、共线性剪枝 |r|>0.95 与 VIF>10）→ ③ 模型训练与评估（逻辑回归 / GBM 等，分类或回归）→ ④ 事后特征分析（SHAP / 置换重要性）。"],
+      dashboard: ["监控看板", "一键生成 HTML 监控页", "给我生成一个 GMV 监控看板",
+        "一键生成独立 HTML 监控看板：KPI 环比卡、趋势与均线、渠道/设备拆解、退款率、近期异动表；数字与 Agent 查询同源同口径，文件可直接分享。"],
+      metric: ["指标字典", "注册/查看/下线指标口径", "注册指标：利润率 = gmv - refund_amount，分母 gmv",
+        "指标字典：用「注册指标：名称 = 分子 - 分母，分母 xx」登记口径（分子分母先在数仓校验，通过即进语义层），此后 SQL、诊断、实验、看板等所有工具同口径引用；支持查看与下线。"],
+      report: ["报告撰写", "结论先行的 Markdown + HTML", "把分析写成周报",
+        "结论先行的分析报告：Markdown + HTML 双格式，含 KPI 摘要、图表、检验表与方法文献引用；可基于当前会话上下文直接生成周报。"]
+    },
+    examples: [
+      "近7天 GMV 为什么跌了？",
+      "拆解一下各渠道的贡献",
+      "满意度调查基线70%，检测3个百分点变化，需要多少样本？",
+      "看下这个 AB 实验的结果",
+      "设计一个支付转化率实验，基线3%，希望检测2%的相对提升，每天5万流量",
+      "用双重差分评估补贴政策对城市 GMV 的影响",
+      "训练分类模型预测用户是否转化",
+      "把分析写成周报"
+    ],
+    greet: "我是 DS Agent。可以直接用自然语言问指标，比如 **近7天 GMV 为什么跌了？** 我会先做季节性异常检测，再拆贡献度、做多维归因；也可以让我设计/解读 AB 实验，或用 DID、合成控制做因果评估。\n\n输入 `help` 查看全部能力。"
+  },
+  en: {
+    tagline: "Analytics in natural language",
+    capsTitle: "Capabilities · click for details", exTitle: "Try asking",
+    foot: "Built-in demo warehouse · DuckDB<br>SQL / anomalies / attribution / experiments / causal",
+    topTitle: 'Chat <em>Just ask in plain language; follow-ups keep context</em>',
+    settings: "Model", clear: "Clear",
+    placeholder: "e.g. Why did GMV drop in the last 7 days? / Read out the AB test / Design a conversion experiment",
+    hint: "Enter to send · Shift+Enter for a new line · type help for all capabilities",
+    thinking: "Analyzing", ready: "ready", error: "error",
+    llmOn: "LLM connected", llmOff: "Built-in rules mode",
+    errPrefix: "Something went wrong: ",
+    settingsTitle: "LLM API Settings",
+    settingsSub: "Configure any OpenAI-compatible endpoint (chat/completions). When set, the LLM identifies intent and orchestrates task workflows (e.g. diagnose → report), generates flexible SQL beyond the semantic layer (executed only after the read-only guard), drafts the final report narrative on top of tool results, and explains agent limitations when a request is out of scope. Without it — or on failure — the built-in deterministic rules keep every feature working.",
+    fieldBase: "Base URL", fieldKey: "API Key", fieldModel: "Model name",
+    test: "Test connection", cancel: "Cancel", save: "Save",
+    saveOk: "Saved.", testOk: "Connection OK: ",
+    testFail: "Connection failed: ", noKey: "Please enter an API key first.",
+    capIntroTitle: "Capability", capIntroExample: "Example question (click to fill the input, then send)",
+    caps: {
+      sql: ["SQL query", "Governed semantic layer, read-only, auto-truncated", "What are GMV and orders by channel over the last 30 days?",
+        "Ask data questions in plain language. Queries run through a governed semantic layer with globally consistent metric calibers (numerator/denominator), read-only execution and automatic row limits; time windows (last 7/30 days) and multi-dimension breakdowns supported."],
+      diagnose: ["Anomaly diagnosis", "Detection + contribution + multi-dim attribution", "Why did GMV drop in the last 7 days?",
+        "Full anomaly diagnosis for a metric: seasonal anomaly detection (STL / Holt-Winters / auto backtested baseline) → per-dimension contribution decomposition → multi-dimension attribution to localize root causes, with significance verdicts and recommendations."],
+      sampling: ["Sampling surveys", "Sample size / stratified draws / representativeness", "How many samples do I need for a satisfaction survey with a 70% baseline to detect a 3pp change?",
+        "Survey sampling toolbox: Cochran-formula sample size for proportions/means (with effect-size sensitivity table), simple-random/systematic/stratified draws (seeded, reproducible, transparent quotas), sampling distribution and standard errors, 95% CIs, and representativeness tests (chi-square GOF / Welch t / KS)."],
+      experiment_design: ["Experiment design", "Sample size / duration / analysis plan", "Design a checkout conversion test: baseline 3%, detect a 2% relative lift, 50k daily traffic",
+        "Experiment designer: computes per-group sample size and duration from baseline, MDE (absolute/relative), daily traffic and significance level; supports standard A/B, A/A and switchback designs, and returns an analysis plan with caveats."],
+      experiment_analysis: ["Experiment readout", "SRM / CUPED / multiplicity / ship decision", "Read out the AB test results",
+        "Experiment readout: SRM sample-ratio check, CUPED variance reduction, normal/Bootstrap tests, multiplicity correction (Bonferroni / Holm), segment heterogeneity — ending with an explicit ship / no-ship recommendation."],
+      causal: ["Causal inference", "DiD / PSM / IPW / synthetic control", "Evaluate the subsidy policy on city GMV with difference-in-differences",
+        "Causal inference family: difference-in-differences (TWFE), propensity score matching (PSM with covariate collinearity pruning and balance checks), IPW, AIPW, synthetic control and regression discontinuity (RDD); effect estimates, confidence intervals and robustness checks, plus post-model SHAP feature analysis."],
+      modeling: ["Modelling", "Preprocess → features → model → SHAP", "Train a classifier to predict user conversion",
+        "Four-stage modelling pipeline: ① preprocessing (missing/NaN imputation, sparse/constant/duplicate columns, winsorising) → ② feature engineering (datetime expansion, one-hot encoding, collinearity pruning at |r|>0.95 and VIF>10) → ③ model training and evaluation (logistic regression / GBM etc., classification or regression) → ④ post-model feature analysis (SHAP / permutation importance)."],
+      dashboard: ["Dashboard", "One-click HTML monitoring page", "Generate a GMV monitoring dashboard",
+        "One-click standalone HTML monitoring dashboard: period-over-period KPI cards, trends with moving averages, channel/device breakdowns, refund rate and a recent-anomaly table; figures share the same source and caliber as agent queries, and the file is directly shareable."],
+      metric: ["Metric dictionary", "Register / view / deprecate calibers", "register metric: profit_rate = gmv - refund_amount, denominator gmv",
+        "Metric dictionary: register a caliber with `register metric: name = numerator - denominator, denominator x` (numerator and denominator are validated against the warehouse, then live in the semantic layer) so SQL, diagnosis, experiments and dashboards all reference the same caliber; view and deprecate supported."],
+      report: ["Reporting", "Conclusion-first Markdown + HTML", "Write the analysis up as a weekly report",
+        "Conclusion-first analysis reports in Markdown + HTML with KPI summary, charts, test tables and method citations; weekly reports can be generated directly from the current session context."]
+    },
+    examples: [
+      "Why did GMV drop in the last 7 days?",
+      "Break down the contribution by channel",
+      "Satisfaction survey, baseline 70%, detect a 3pp change - how many samples?",
+      "Read out the AB test results",
+      "Design a checkout conversion test: baseline 3%, detect a 2% relative lift, 50k daily traffic",
+      "Evaluate the subsidy policy on city GMV with difference-in-differences",
+      "Train a classifier to predict user conversion",
+      "Write the analysis up as a weekly report"
+    ],
+    greet: "I am DS Agent. Ask about metrics in plain language, e.g. **Why did GMV drop in the last 7 days?** I run seasonal anomaly detection, contribution decomposition and multi-dimension attribution; I can also design or read out AB experiments, or estimate causal effects with DiD and synthetic control.\n\nType `help` to see all capabilities."
+  }
+};
+
+let lang = localStorage.getItem("ds_agent_lang") || "zh";
+
+function t(key) { return I18N[lang][key]; }
+
+function setLang(next) {
+  lang = next;
+  localStorage.setItem("ds_agent_lang", lang);
+  applyLang();
+}
+
+function applyLang() {
+  document.getElementById("btn-zh").classList.toggle("on", lang === "zh");
+  document.getElementById("btn-en").classList.toggle("on", lang === "en");
+  document.getElementById("side-tagline").textContent = t("tagline");
+  document.getElementById("side-caps-title").textContent = t("capsTitle");
+  document.getElementById("side-ex-title").textContent = t("exTitle");
+  document.getElementById("side-foot").innerHTML = t("foot");
+  document.getElementById("top-title").innerHTML = t("topTitle");
+  document.getElementById("btn-clear").textContent = t("clear");
+  document.getElementById("input").placeholder = t("placeholder");
+  document.getElementById("hint").textContent = t("hint");
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+  const capsEl = document.getElementById("caps");
+  capsEl.innerHTML = "";
+  Object.values(t("caps")).forEach(([name, desc, probe, intro]) => {
+    const d = document.createElement("div");
+    d.className = "cap";
+    d.title = name;
+    d.innerHTML = `<b>${esc(name)}</b><span>${esc(desc)}</span>`;
+    d.onclick = () => showCapIntro(name, desc, probe, intro);
+    capsEl.appendChild(d);
+  });
+  const exEl = document.getElementById("examples");
+  exEl.innerHTML = "";
+  t("examples").forEach(text => {
+    const b = document.createElement("button");
+    b.className = "ex";
+    b.textContent = text;
+    b.onclick = () => { document.getElementById("input").value = text; send(); };
+    exEl.appendChild(b);
+  });
+  refreshLLMStatus();
+  // Preset agent chat content (greeting) follows the interface language.
+  const greetEl = document.getElementById("greeting-text");
+  if (greetEl) greetEl.innerHTML = md(t("greet"));
+}
+
+function esc(s) {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Minimal markdown: bold, inline code, headings, ordered/unordered lists, paragraphs.
+function md(text) {
+  const lines = esc(text).split("\n");
+  let out = [], list = null;
+  const flush = () => { if (list) { out.push(`</${list}>`); list = null; } };
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    if (!line.trim()) { flush(); continue; }
+    let m;
+    if ((m = line.match(/^###\s+(.*)$/))) { flush(); out.push(`<h3>${inline(m[1])}</h3>`); continue; }
+    if ((m = line.match(/^##\s+(.*)$/))) { flush(); out.push(`<h3>${inline(m[1])}</h3>`); continue; }
+    if ((m = line.match(/^\s*(\d+)\.\s+(.*)$/))) {
+      if (list !== "ol") { flush(); out.push("<ol>"); list = "ol"; }
+      out.push(`<li>${inline(m[2])}</li>`); continue;
+    }
+    if ((m = line.match(/^\s*[-*]\s+(.*)$/))) {
+      if (list !== "ul") { flush(); out.push("<ul>"); list = "ul"; }
+      out.push(`<li>${inline(m[1])}</li>`); continue;
+    }
+    flush();
+    out.push(`<p>${inline(line)}</p>`);
+  }
+  flush();
+  return out.join("");
+}
+function inline(s) {
+  return s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+          .replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+
+function renderBlocks(blocks) {
+  const parts = [];
+  blocks.forEach(b => {
+    if (b.type === "kpi") {
+      const items = b.items.map(it => {
+        const cls = it.good === true ? "good" : (it.good === false ? "bad" : "");
+        return `<div class="kpi ${cls}"><div class="lbl">${esc(it.label)}</div>
+          <div class="val">${esc(it.value)}</div>
+          <div class="sub">${esc(it.sub || "")}</div></div>`;
+      }).join("");
+      parts.push(`<div class="kpis">${items}</div>`);
+    } else if (b.type === "chart") {
+      parts.push(`<div class="chart"><img src="${b.image}" alt=""><div class="cap">${esc(b.title || "")}</div></div>`);
+    } else if (b.type === "table") {
+      const head = b.columns.map(c => `<th>${esc(c)}</th>`).join("");
+      const rows = b.rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("");
+      parts.push(`<div class="tbl-wrap"><div class="tbl-title">${esc(b.title || "")}</div>
+        <table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`);
+    } else if (b.type === "markdown") {
+      parts.push(md(b.markdown || ""));
+    }
+  });
+  return parts.join("");
+}
+
+function addUser(text) {
+  const el = document.createElement("div");
+  el.className = "msg user";
+  el.innerHTML = `<div class="bubble-user">${esc(text)}</div>`;
+  document.getElementById("messages").appendChild(el);
+  scroll();
+}
+
+// Sidebar capability card click: insert an intro card into the chat.
+// The example question only fills the input — it is never sent automatically.
+function showCapIntro(name, desc, probe, intro) {
+  const el = document.createElement("div");
+  el.className = "msg";
+  const exBtn = probe
+    ? `<div class="cap-intro-ex">${esc(t("capIntroExample"))}</div>
+       <button class="ex" onclick="fillInput(this.dataset.q)" data-q="${esc(probe).replace(/"/g, "&quot;")}">${esc(probe)}</button>`
+    : "";
+  el.innerHTML = `<div class="who"><span class="mark">DS</span><span>${esc(t("capIntroTitle"))} · ${esc(name)}</span></div>
+    <div class="answer cap-intro">
+      <div class="cap-intro-brief">${esc(desc)}</div>
+      <div class="cap-intro-body">${md(intro || "")}</div>
+      ${exBtn}
+    </div>`;
+  document.getElementById("messages").appendChild(el);
+  scroll();
+}
+
+function fillInput(text) {
+  const input = document.getElementById("input");
+  input.value = text;
+  input.focus();
+  input.dispatchEvent(new Event("input"));
+}
+
+function addAgent(text, blocks, artifacts, intent) {
+  const el = document.createElement("div");
+  el.className = "msg";
+  const links = (artifacts || []).map(p => {
+    const name = p.split("/").pop();
+    return `<a href="/artifacts/${encodeURIComponent(name)}" target="_blank">${esc(name)}</a>`;
+  }).join("");
+  el.innerHTML = `<div class="who"><span class="mark">DS</span><span>DS Agent${intent ? " · " + esc(intent) : ""}</span></div>
+    <div class="answer">${md(text)}${renderBlocks(blocks || [])}
+    ${links ? `<div class="artifacts">${links}</div>` : ""}</div>`;
+  document.getElementById("messages").appendChild(el);
+  scroll();
+}
+
+function addTyping() {
+  const el = document.createElement("div");
+  el.className = "msg";
+  el.id = "typing";
+  el.innerHTML = `<div class="who"><span class="mark">DS</span><span>${esc(t("thinking"))}</span></div>
+    <div class="answer"><span class="typing"><i></i><i></i><i></i></span></div>`;
+  document.getElementById("messages").appendChild(el);
+  scroll();
+}
+
+function scroll() {
+  const chat = document.getElementById("chat");
+  chat.scrollTop = chat.scrollHeight;
+}
+
+let busy = false;
+async function send() {
+  if (busy) return;
+  const input = document.getElementById("input");
+  const text = input.value.trim();
+  if (!text) return;
+  addUser(text);
+  input.value = "";
+  input.style.height = "auto";
+  busy = true;
+  document.getElementById("send").disabled = true;
+  addTyping();
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+    const data = await res.json();
+    document.getElementById("typing")?.remove();
+    if (!res.ok) throw new Error(data.detail || "request failed");
+    addAgent(data.text, data.blocks, data.artifacts, data.intent);
+  } catch (err) {
+    document.getElementById("typing")?.remove();
+    const el = document.createElement("div");
+    el.className = "msg";
+    el.innerHTML = `<div class="answer err">${esc(t("errPrefix"))}${esc(err.message)}</div>`;
+    document.getElementById("messages").appendChild(el);
+  } finally {
+    busy = false;
+    document.getElementById("send").disabled = false;
+    input.focus();
+  }
+}
+
+async function resetChat() {
+  await fetch("/api/reset", { method: "POST" });
+  document.getElementById("messages").innerHTML = "";
+  greet();
+}
+
+function greet() {
+  const el = document.createElement("div");
+  el.className = "msg";
+  el.id = "greeting-msg";
+  el.innerHTML = `<div class="who"><span class="mark">DS</span><span>DS Agent</span></div>
+    <div class="answer" id="greeting-text">${md(t("greet"))}</div>`;
+  document.getElementById("messages").appendChild(el);
+  scroll();
+}
+
+/* ------------------------------------------------ LLM settings panel */
+function openSettings() {
+  fetch("/api/llm/status").then(r => r.json()).then(s => {
+    document.getElementById("cfg-base").value = s.base_url || "";
+    document.getElementById("cfg-model").value = s.model || "";
+    document.getElementById("cfg-key").value = "";
+    document.getElementById("cfg-key").placeholder = s.api_key_masked
+      ? `${I18N[lang].fieldKey} (${s.api_key_masked})` : "sk-...";
+    document.getElementById("llm-msg").textContent = "";
+    document.getElementById("llm-msg").className = "llm-msg";
+    document.getElementById("overlay").classList.add("open");
+  });
+}
+function closeSettings() {
+  document.getElementById("overlay").classList.remove("open");
+}
+async function saveLLM() {
+  const body = {
+    base_url: document.getElementById("cfg-base").value.trim() || null,
+    model: document.getElementById("cfg-model").value.trim() || null
+  };
+  const key = document.getElementById("cfg-key").value.trim();
+  if (key) body.api_key = key;
+  const res = await fetch("/api/llm/config", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const s = await res.json();
+  const msg = document.getElementById("llm-msg");
+  msg.className = "llm-msg ok";
+  msg.textContent = t("saveOk") + (s.enabled ? "" : " " + t("noKey"));
+  refreshLLMStatus();
+}
+async function testLLM() {
+  const msg = document.getElementById("llm-msg");
+  msg.className = "llm-msg";
+  msg.textContent = "…";
+  const res = await fetch("/api/llm/test", { method: "POST" });
+  const data = await res.json();
+  msg.className = "llm-msg " + (data.ok ? "ok" : "bad");
+  msg.textContent = data.ok ? t("testOk") + (data.sample || "ok") : t("testFail") + (data.error || "");
+  refreshLLMStatus();
+}
+async function refreshLLMStatus() {
+  try {
+    const s = await (await fetch("/api/llm/status")).json();
+    const dot = document.getElementById("llm-dot");
+    const label = document.getElementById("llm-status-text");
+    dot.classList.toggle("off", !s.enabled);
+    label.textContent = s.enabled ? `${t("llmOn")} · ${s.model}` : t("llmOff");
+  } catch (e) { /* ignore */ }
+}
+
+document.getElementById("input").addEventListener("input", function () {
+  this.style.height = "auto";
+  this.style.height = Math.min(this.scrollHeight, 120) + "px";
+});
+document.getElementById("input").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+});
+document.getElementById("overlay").addEventListener("click", e => {
+  if (e.target === e.currentTarget) closeSettings();
+});
+
+applyLang();
+greet();
+document.getElementById("input").focus();
+</script>
+</body>
+</html>

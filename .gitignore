@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+venv/
+artifacts/*
+!artifacts/.gitkeep
+demo_data/
+tests/.tmp/
+.env
+.pytest_cache/
+*.duckdb
+*.parquet
+.DS_Store
