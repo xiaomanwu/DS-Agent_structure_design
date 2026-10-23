@@ -84,6 +84,19 @@ print(reply.text)    # 叙述；reply.blocks 为 KPI 卡 / 图表 / 表格
 4. **可复现**：同样问题同样答案，抽样带种子，308 个测试锁定行为；
 5. **可扩展**：新能力经 `registry.py` 注册即成一等路由目标，免改核心代码。
 
+### 设计理念：知识库驱动的成长型 Agent
+
+语义识别与判断不靠微调模型，而靠**迭代知识库**。Agent 的"懂不懂你"、"选没选对方法"、"讲没讲清楚"，每一环都落在可编辑、可版本化的 Markdown 语料上——改一个文件即生效，能力随知识库成长：
+
+| 知识库 | 载体 | 支撑的判断 | 迭代方式 |
+| --- | --- | --- | --- |
+| **SQL 知识库** | `semantic.py` + 指标字典 | 把「GMV」「利润率」翻译成口径正确的 SQL | 注册/下线指标（数仓校验后全链路生效），登记表、列、口径 |
+| **企业知识库** | `docs/business_knowledge.md`（RAG 语料） | 业务名词解释、异动归因的业务判断依据 | 遇到不懂的说法直接写进知识库，下次检索即命中 |
+| **工具使用知识库** | `docs/methodology.md` + `docs/statistical_tests.md` + `registry.py` | 「该用什么方法」选型决策；30+ 检验理论卡随结论自动附表 | 新方法经 registry 注册即成一等能力；检验卡随文档更新 |
+| **优秀报告知识库** | 结论先行的报告模板 + 置信卡规范 | 「怎么把结果讲清楚」叙述结构、图表选型、证据呈现 | 沉淀好的报告骨架为模板，后续分析按同一范式交付 |
+
+迭代回路：**用户纠正 / 新口径 / 新方法 / 更好的表达 → 写入对应知识库 → 即时生效 → 测试锁定既有行为不回退**。模型权重不变，Agent 变聪明。
+
 ### 配置与测试
 
 | 变量 | 说明 |
@@ -180,6 +193,24 @@ User question (Web / API / CLI)
 3. **Evidence attached** — test tables and confidence cards ship with every conclusion;
 4. **Reproducible** — same question, same answer; seeded sampling; 308 tests lock behavior;
 5. **Extensible** — new capabilities register via `registry.py` as first-class routing targets.
+
+### Design philosophy: a knowledge-base-driven agent that grows
+
+Semantic recognition and judgment come from **iterated knowledge bases**, not model
+fine-tuning. Whether the agent "understands you", "picks the right method" or "tells the
+story well" — each hop lands on editable, version-controlled Markdown corpora. Edit a file,
+capability changes instantly:
+
+| Knowledge base | Carrier | What it enables | How it iterates |
+| --- | --- | --- | --- |
+| **SQL knowledge** | `semantic.py` + metric dictionary | Turning "GMV" / "profit rate" into caliber-correct SQL | Register/deprecate metrics (warehouse-validated, live chain-wide); add tables, columns, calibers |
+| **Enterprise knowledge** | `docs/business_knowledge.md` (RAG corpus) | Business-term explanations; domain judgment for attribution | New phrasings go straight into the corpus — retrievable on the next ask |
+| **Tool-usage knowledge** | `docs/methodology.md` + `docs/statistical_tests.md` + `registry.py` | "Which method fits" decisions; 30+ test cards auto-attached to conclusions | New methods register via the registry as first-class capabilities; test cards update with docs |
+| **Report-exemplar knowledge** | Conclusion-first report templates + confidence-card spec | "How to present results" — narrative structure, chart choice, evidence display | Good report skeletons become templates; every analysis ships in the same form |
+
+The iteration loop: **user correction / new caliber / new method / better phrasing →
+written into the matching knowledge base → takes effect immediately → tests lock existing
+behavior**. Model weights unchanged; the agent gets smarter.
 
 ### Configuration & tests
 

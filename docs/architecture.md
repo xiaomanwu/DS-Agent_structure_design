@@ -103,6 +103,20 @@ Wired in three places:
 - Reports open with a business-context section built from the session's metrics.
 - The `knowledge` intent answers glossary questions directly, with sources and relevance.
 
+**Knowledge-base-driven growth.** The knowledge layer is one of four corpora the agent's
+semantic recognition and judgment depend on; capability grows by iterating the corpora,
+not by fine-tuning a model:
+
+| Corpus | Supports | Iteration |
+| --- | --- | --- |
+| SQL knowledge (`semantic.py` + metric dictionary) | question → caliber-correct SQL | register/deprecate metrics, add tables & calibers |
+| Enterprise knowledge (`business_knowledge.md`) | business terms, attribution judgment | new phrasings appended to the corpus |
+| Tool-usage knowledge (`methodology.md` + `statistical_tests.md` + `registry.py`) | method selection, test cards | new methods register as capabilities |
+| Report-exemplar knowledge (report templates + confidence-card spec) | narrative structure, chart choice | good skeletons become templates |
+
+Every edit takes effect on the next run (the markdown files are the runtime corpus), while
+the test suite locks existing behavior so iteration cannot regress old answers.
+
 ### 3. Stats primitives (`ds_agent/stats/`)
 
 `inference.py` and `power.py` hold the maths: Wilson intervals, two-proportion z, Welch t, bootstrap,
