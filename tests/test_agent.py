@@ -148,3 +148,53 @@ def test_time_window_parsing():
     week, _ = parse_time_window("上周的转化率", anchor)
     assert week.days == 7
     assert week.end == date(2026, 10, 18)  # Sunday of the previous week
+
+
+# ------------------------------------------------------------ re-planning
+def test_ranked_intents_orders_capabilities(agent):
+    """The rule ranking exposes next-best capabilities for re-planning."""
+    ranked = agent.ranked_intents("看下这个 AB 实验的结果")
+    assert ranked[0] == "experiment_analysis"
+    assert "sql" in ranked  # anomaly/query wording keeps sql as a fallback
+    # exclude removes failed intents from the candidate list
+    assert "experiment_analysis" not in agent.ranked_intents(
+        "看下这个 AB 实验的结果", exclude=("experiment_analysis",)
+    )
+
+
+def test_ask_replans_to_next_best_intent_on_failure(agent, monkeypatch):
+    """Execution failure under the planned intent must trigger a re-plan.
+
+    LLM does intent recognition and dispatch; code executes. When the code
+    fails, the agent retries the next-ranked deterministic candidate and
+    records the replan trail in reply.data.
+    """
+    calls = []
+
+    def exploding_handler(question, slots):
+        calls.append("readout")
+        raise RuntimeError("readout exploded")
+
+    monkeypatch.setattr(agent, "_handle_experiment_analysis", exploding_handler)
+    reply = agent.ask("看下这个 AB 实验的结果")
+
+    assert reply.data.get("intent") == "sql"  # next-best candidate took over
+    replan = reply.data.get("replan")
+    assert replan and replan["from"] == "experiment_analysis" and replan["to"] == "sql"
+    assert replan["attempts"][0]["error"] == "readout exploded"
+    assert "已尝试" not in reply.text  # a recovery, not an error page
+
+
+def test_ask_reports_when_replanning_is_exhausted(agent, monkeypatch):
+    """When every candidate fails, the error reply lists all attempts."""
+    def always_boom(question, slots):
+        raise RuntimeError("nope")
+
+    for name in ("_handle_experiment_analysis", "_handle_sql"):
+        monkeypatch.setattr(agent, name, always_boom)
+    reply = agent.ask("看下这个 AB 实验的结果")
+
+    assert reply.data.get("replan_failed") is not None
+    tried_intents = {a["intent"] for a in reply.data["replan_failed"]}
+    assert {"experiment_analysis", "sql"} <= tried_intents
+    assert "没能完成" in reply.text

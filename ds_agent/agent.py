@@ -498,11 +498,10 @@ class DSQueryAgent(ReadoutHandlers):
             self.summary_bullets.append(bullet)
 
     # ------------------------------------------------------------------ route
-    def route(self, question: str) -> Tuple[str, Dict[str, Any], float]:
-        """Keyword scoring router. Returns (intent, slots, confidence)."""
-        q = question.lower()
+    def _rule_scores(self, q: str) -> Dict[str, int]:
+        """Deterministic keyword scores per capability (shared by route/rank)."""
         scores = {k: 0 for k in CAPABILITIES}
-
+        q = q.lower()
         has_experiment = bool(re.search(r"实验|\bab\b|a/b|ab test|experiment|分流", q))
         has_design = bool(re.search(r"设计|样本量|需要多少|多大样本|多久|时长|功效|power|mde|最小|方案|够不够|sample size|duration", q))
         has_result = bool(re.search(r"结果|结论|分析|显著|看下|readout|result|lift|上线|该不该|效果", q))
@@ -626,6 +625,19 @@ class DSQueryAgent(ReadoutHandlers):
         # that would otherwise hand the question to the SQL handler.
         if re.search(r"时序基线|预测基线|基线对比|哪个基线|holt|arima|sarima|stl_ets|forecast baseline", q, re.I):
             scores["diagnose"] += 6
+
+        return scores
+
+    def ranked_intents(self, question: str, exclude: Tuple[str, ...] = ()) -> List[str]:
+        """Capability intents ranked by rule score (used for re-planning)."""
+        scores = self._rule_scores(question)
+        ranked = sorted(scores.items(), key=lambda kv: -kv[1])
+        return [name for name, score in ranked if score > 0 and name not in exclude]
+
+    def route(self, question: str) -> Tuple[str, Dict[str, Any], float]:
+        """Keyword scoring router. Returns (intent, slots, confidence)."""
+        q = question.lower()
+        scores = self._rule_scores(q)
 
         best = max(scores.items(), key=lambda kv: kv[1])
         total = sum(scores.values()) or 1
@@ -768,13 +780,39 @@ class DSQueryAgent(ReadoutHandlers):
         handler = handlers.get(intent, self._handle_sql)
         try:
             reply = handler(question, slots)
-        except Exception as exc:  # noqa: BLE001 - surfaced with a next-step hint
-            reply = AgentReply(
-                text=self._t(
-                    f"这一步没能完成：`{exc}`\n\n可以试着把问题说得更具体，比如「近7天各渠道 GMV 环比变化」，或输入 `help` 看能力清单。",
-                    f"That step failed: `{exc}`\n\nTry being more specific (e.g. \"GMV by channel, last 7 days vs prior\"), or type `help`.",
+        except Exception as exc:  # noqa: BLE001 - trigger the re-plan loop
+            # Re-planning: execution failed under the planned intent. The
+            # deterministic rule ranking provides the next-best capabilities
+            # (always available, no LLM needed); each candidate is tried once.
+            attempts: List[Dict[str, Any]] = [{"intent": intent, "error": str(exc)}]
+            reply = None
+            tried = {intent, "help"}
+            for alt in self.ranked_intents(question, exclude=tuple(tried))[:2]:
+                alt_handler = handlers.get(alt)
+                if alt_handler is None:
+                    continue
+                tried.add(alt)
+                try:
+                    reply = alt_handler(question, slots)
+                except Exception as exc2:  # noqa: BLE001 - try the next candidate
+                    attempts.append({"intent": alt, "error": str(exc2)})
+                    continue
+                reply.data["replan"] = {"from": intent, "to": alt, "attempts": attempts}
+                intent = alt
+                break
+            if reply is None:
+                tried_note = "、".join(a["intent"] for a in attempts)
+                reply = AgentReply(
+                    text=self._t(
+                        f"这一步没能完成（已尝试 {tried_note}）：\n"
+                        + "\n".join(f"- `{a['intent']}`：{a['error']}" for a in attempts)
+                        + "\n\n可以试着把问题说得更具体，比如「近7天各渠道 GMV 环比变化」，或输入 `help` 看能力清单。",
+                        f"That step failed (tried: {tried_note}):\n"
+                        + "\n".join(f"- `{a['intent']}`: {a['error']}" for a in attempts)
+                        + "\n\nTry being more specific (e.g. \"GMV by channel, last 7 days vs prior\"), or type `help`.",
+                    )
                 )
-            )
+                reply.data["replan_failed"] = attempts
         # Task chain from the LLM plan (e.g. diagnose -> report): run the
         # remaining steps against the same resolved slots and merge replies.
         chain = (plan or {}).get("chain") if isinstance(plan, dict) else None

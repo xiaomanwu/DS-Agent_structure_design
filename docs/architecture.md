@@ -125,6 +125,18 @@ Keeping them separate means the tools compose statistics instead of re-deriving 
 
 ### 4. Orchestrator (`ds_agent/agent.py` + `ds_agent/readouts.py`)
 
+Division of labour: **the LLM recognizes intent and dispatches tasks; deterministic code
+executes them; execution failure triggers re-planning.**
+
+- Intent recognition: the LLM planner (when configured) maps the question to an intent and
+  optionally a task chain (e.g. diagnose → report); the keyword router (`route()`) is the
+  deterministic fallback with identical handlers.
+- Dispatch & execution: the chosen handler runs in `ask()`; all statistics come from the
+  tested tool/primitive layers.
+- **Re-planning on failure**: if a handler raises, `ranked_intents()` re-scores the question
+  deterministically and the next-best capability is retried (up to 2 candidates). The recovery
+  trail lands in `reply.data["replan"]`; only when every candidate fails does the reply become
+  an error listing all attempts (`replan_failed`).
 - `route()` scores keyword families into eighteen intents, then extracts slots (metric, dimensions,
   window, comparison, anchor). An LLM, when configured, fills the same slots — the handlers are
   identical. The advanced intents (switchback/reversal/nested/two-sided/sensitivity/uplift/rdd/

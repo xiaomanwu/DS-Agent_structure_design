@@ -2,20 +2,32 @@
 
 <div align="center">
 
-**用自然语言完成日常数据分析的智能体** · **A natural-language data science agent**
+**面向业务的数据分析架构 Agent** · **A business-oriented analytics agent**
+
+LLM 负责意图识别与任务分发，确定性代码负责执行与统计结论，失败自动重规划
+· **LLM recognizes intent & dispatches tasks; deterministic code executes; failures re-plan**
 
 🇨🇳 中文默认展开 · 🇬🇧 English collapsed · 点击标题切换 / click a section header to toggle
 
 </div>
 
+> ⚠️ **人工核对声明 / Human review pending**
+>
+> 本项目（包括代码、文档与演示内容）由 AI 辅助生成，**尚未经过人工核对审查**。
+> 统计方法的正确性以可运行的测试与金标准评测集为准，观点与结论请自行验证后再采用。
+>
+> This project — code, docs and demo content — is AI-generated and **has not yet been
+> human-reviewed**. Statistical correctness is backed by runnable tests and a frozen
+> benchmark; verify claims before relying on them.
+
 > 🎨 **Vibe Coding 作品 / Built by Vibe Coding**
 >
 > 本项目由人类提出需求、场景与验收标准，AI 全程编码实现——从统计引擎、因果推断工具到 Web
-> 界面与演示动图，均为人机对话式协作的产物。**318 个自动化测试**是这套协作方式的可以跑通的证明。
+> 界面与演示动图，均为人机对话式协作的产物。**335 个自动化测试**是这套协作方式的可以跑通的证明。
 >
 > This project was built vibe-coding style: a human steering with requirements and acceptance
 > criteria, an AI writing all the code — stats engines, causal tools, web UI and demo GIF alike.
-> The **318 automated tests** are the proof receipt of that collaboration could work.
+> The **335 automated tests** are the proof receipt of that collaboration could work.
 
 所有数字都来自确定性、经过测试的统计代码，不靠大模型"编"；没有 LLM 也能完整跑通。
 Every number comes from deterministic, tested code — the LLM is optional.
@@ -73,23 +85,31 @@ ds-agent-mcp   # stdio JSON-RPC，零第三方依赖；暴露 ask / 样本量 / 
 
 ### Agent 框架设计
 
-核心原则：**LLM 可选、确定性优先**。
+核心原则：**LLM 可选、确定性优先**。LLM 的主要作用是**意图识别与任务分发**，
+**代码负责任务执行**，执行失败时**自动重新规划**（按规则评分尝试次优能力）。
 
 ```
 用户问题（Web / API / CLI）
-   ├─► ① 意图路由    agent.py::route() 规则打分；LLM planner 可选增强，失败回退规则
-   ├─► ② 能力处理器  20+ 处理器（诊断/实验/因果/建模/抽样/看板/指标/报告…）
+   ├─► ① 意图识别与分发  LLM planner 主责（映射意图 + 任务链）；规则打分为确定性回退
+   │        ↓ 分发
+   ├─► ② 能力处理器  20+ 处理器（诊断/实验/因果/建模/抽样/看板/指标/报告…）——代码执行
+   │        ↓ 执行失败
+   │     ⟲ 重规划  按规则评分尝试次优能力（ranked_intents），全部失败才返回错误
    ├─► ③ 工具层      tools/*：每个分析领域一个确定性模块
    ├─► ④ 统计原语    stats/*：功效、检验、CUPED、BH、抽样——全层共用，测试锁定
    ├─► ⑤ 数据层      semantic.py 口径唯一来源 + DuckDB 数仓 + 外部数据源
    └─► ⑥ 横切设施    置信卡 · 图表 · 报告 · RAG 知识库 · 指标字典 · registry 运行时扩展
 ```
 
-1. **LLM 可选**：规则路由离线完整可用，LLM 失败零功能损失；
-2. **口径唯一**：所有工具引用同一语义层，注册指标数仓校验后全链路生效；
-3. **结论必证**：每类分析自动附检验表与置信度验证卡，可审计；
-4. **可复现**：同样问题同样答案，抽样带种子，318 个测试锁定行为；
-5. **可扩展**：新能力经 `registry.py` 注册即成一等路由目标，免改核心代码。
+1. **LLM 管理解、代码管执行**：LLM 只做意图识别与任务分发（含多步任务链，
+   如「诊断 → 报告」），所有统计计算由测试锁定的确定性代码执行；
+2. **失败必重规划**：某能力执行抛错时，自动按规则评分改派次优能力重试
+   （`reply.data["replan"]` 记录改派轨迹），全部候选失败才返回带尝试清单的错误；
+3. **规则路由零依赖兜底**：不配 LLM 或调用失败，意图识别回退关键词打分，功能零损失；
+4. **口径唯一**：所有工具引用同一语义层，注册指标数仓校验后全链路生效；
+5. **结论必证**：每类分析自动附检验表与置信度验证卡，可审计；
+6. **可复现**：同样问题同样答案，抽样带种子，321 个测试锁定行为；
+7. **可扩展**：新能力经 `registry.py` 注册即成一等路由目标，免改核心代码。
 
 ### 设计理念：知识库驱动的成长型 Agent
 
@@ -113,7 +133,7 @@ ds-agent-mcp   # stdio JSON-RPC，零第三方依赖；暴露 ask / 样本量 / 
 | `DS_AGENT_LLM_BASE_URL` / `_API_KEY` / `_MODEL` | 任意 OpenAI 兼容端点；不填走规则路由 |
 
 ```bash
-pytest -q                              # 318 个测试，覆盖统计正确性与端到端问答
+pytest -q                              # 321 个测试，覆盖统计正确性与端到端问答
 python scripts/run_benchmark.py        # 金标准评测集（18 个跨能力用例，期望值冻结）
 python examples/01_walkthrough.py      # 全部能力的完整对话
 python examples/04_custom_extension.py # 运行时注册自定义能力扩展
@@ -122,7 +142,7 @@ python examples/04_custom_extension.py # 运行时注册自定义能力扩展
 ### 深入阅读
 
 - `docs/architecture.md` — 架构与 Extension points；`docs/methodology.md` — 全部方法细节
-- `docs/statistical_tests.md` — 30+ 检验目录；`docs/metric_dictionary.md` / `business_knowledge.md` — 指标口径与知识库语料
+- `docs/statistical_tests.md` — 30+ 检验目录；`docs/testing.md` — 测试分类目录与去重方法；`docs/metric_dictionary.md` / `business_knowledge.md` — 指标口径与知识库语料
 - `docs/market_data_agents_comparison.md` / `_en.md` — Data Agent 市场调研与竞品对比（中英双语）
 - `docs/blog_deterministic_data_agent.md` — 技术长文：为什么 Data Agent 应该是确定性的（AI 辅助撰写，人工审核中）
 - `benchmarks/golden_qa.jsonl` — 金标准评测集；`python scripts/run_benchmark.py` 一键复跑
@@ -178,31 +198,44 @@ reply = agent.ask("Why did GMV drop in the last 7 days?")
 print(reply.text)    # narrative; reply.blocks carries KPI cards / charts / tables
 ```
 
-**Optional LLM**: set any OpenAI-compatible endpoint in the ⚙︎ "Model" panel. The LLM only
-orchestrates intent, generates flexible SQL beyond the semantic layer (validated by the read-only
-guard) and narrates results — **without it, or on failure, everything falls back to the built-in
-deterministic router with zero feature loss**.
+**Optional LLM**: set any OpenAI-compatible endpoint in the ⚙︎ "Model" panel. The LLM's
+role is intent recognition and task dispatch (it can also generate flexible SQL beyond the
+semantic layer behind the read-only guard, and narrate results) — **without it, or on
+failure, everything falls back to the built-in deterministic router with zero feature loss,
+and execution failures re-plan to the next-best capability**.
 
 ### Agent framework design
 
-Core principle: **LLM optional, determinism first**.
+Core principle: **LLM optional, determinism first**. The LLM's job is **intent
+recognition and task dispatch**; **code executes**; on execution failure the agent
+**re-plans automatically** (next-best capability by rule score).
 
 ```
 User question (Web / API / CLI)
-   ├─► ① Intent routing      agent.py::route() rule scoring; optional LLM planner with rule fallback
-   ├─► ② Capability handlers 20+ handlers (diagnosis / experiments / causal / modelling / sampling / …)
+   ├─► ① Intent & dispatch   LLM planner leads (intent + task chain); rule scoring is the deterministic fallback
+   │        ↓ dispatch
+   ├─► ② Capability handlers 20+ handlers — code executes (diagnosis / experiments / causal / sampling / …)
+   │        ↓ execution fails
+   │     ⟲ Re-plan           retry next-ranked capabilities (ranked_intents); error only if all fail
    ├─► ③ Tool layer          tools/*: one deterministic module per analysis domain
    ├─► ④ Stat primitives     stats/*: power, tests, CUPED, BH, sampling — shared, test-locked
    ├─► ⑤ Data layer          semantic.py (single source of calibers) + DuckDB + external sources
    └─► ⑥ Cross-cutting       confidence cards · charts · reports · RAG · metric dictionary · registry
 ```
 
-1. **LLM optional** — rule router works fully offline; LLM failure costs no feature;
-2. **One caliber** — every tool reads the same semantic layer; registered metrics are
+1. **LLM understands, code executes** — the LLM only recognizes intent and dispatches
+   tasks (including multi-step chains like "diagnose → report"); all statistics run in
+   test-locked deterministic code;
+2. **Failure always re-plans** — when a capability throws, the next-ranked capability is
+   retried automatically (`reply.data["replan"]` records the trail); the error reply only
+   appears after every candidate failed;
+3. **Zero-dependency fallback** — without an LLM, or on LLM failure, intent recognition
+   falls back to keyword scoring with zero feature loss;
+4. **One caliber** — every tool reads the same semantic layer; registered metrics are
    warehouse-validated then live across the whole chain;
-3. **Evidence attached** — test tables and confidence cards ship with every conclusion;
-4. **Reproducible** — same question, same answer; seeded sampling; 318 tests lock behavior;
-5. **Extensible** — new capabilities register via `registry.py` as first-class routing targets.
+5. **Evidence attached** — test tables and confidence cards ship with every conclusion;
+6. **Reproducible** — same question, same answer; seeded sampling; 321 tests lock behavior;
+7. **Extensible** — new capabilities register via `registry.py` as first-class routing targets.
 
 ### Design philosophy: a knowledge-base-driven agent that grows
 
@@ -231,7 +264,7 @@ behavior**. Model weights unchanged; the agent gets smarter.
 | `DS_AGENT_LLM_BASE_URL` / `_API_KEY` / `_MODEL` | Any OpenAI-compatible endpoint; empty = deterministic router |
 
 ```bash
-pytest -q                              # 318 tests
+pytest -q                              # 321 tests
 python scripts/run_benchmark.py        # golden-QA benchmark (18 cases, frozen expectations)
 python examples/01_walkthrough.py      # every capability, end to end
 python examples/04_custom_extension.py # register a custom capability at runtime
@@ -240,7 +273,7 @@ python examples/04_custom_extension.py # register a custom capability at runtime
 ### Further reading
 
 - `docs/architecture.md` — architecture & extension points; `docs/methodology.md` — full method detail
-- `docs/statistical_tests.md` — the 30+ test catalogue; `docs/metric_dictionary.md` / `business_knowledge.md`
+- `docs/statistical_tests.md` — the 30+ test catalogue; `docs/testing.md` — test taxonomy & dedup method; `docs/metric_dictionary.md` / `business_knowledge.md`
 - `docs/market_data_agents_comparison.md` / `_en.md` — Data Agent market research & competitor comparison (ZH/EN)
 - `docs/blog_deterministic_data_agent.md` — essay: why data agents should be deterministic (AI-drafted, human review pending)
 - `benchmarks/golden_qa.jsonl` — golden-QA benchmark; `python scripts/run_benchmark.py` to replay
