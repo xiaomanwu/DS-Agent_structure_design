@@ -46,6 +46,7 @@ modeling = ["scikit-learn>=1.4", "shap>=0.45"]
 
 [project.scripts]
 ds-agent = "ds_agent.cli:main"
+ds-agent-mcp = "ds_agent.mcp_server:main"
 
 [tool.setuptools.packages.find]
 include = ["ds_agent*"]

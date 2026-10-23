@@ -11,11 +11,11 @@
 > 🎨 **Vibe Coding 作品 / Built by Vibe Coding**
 >
 > 本项目由人类提出需求、场景与验收标准，AI 全程编码实现——从统计引擎、因果推断工具到 Web
-> 界面与演示动图，均为人机对话式协作的产物。**308 个自动化测试**是这套协作方式的质量证明。
+> 界面与演示动图，均为人机对话式协作的产物。**318 个自动化测试**是这套协作方式的质量证明。
 >
 > This project was built vibe-coding style: a human steering with requirements and acceptance
 > criteria, an AI writing all the code — stats engines, causal tools, web UI and demo GIF alike.
-> The **308 automated tests** are the quality receipt of that collaboration.
+> The **318 automated tests** are the quality receipt of that collaboration.
 
 所有数字都来自确定性、经过测试的统计代码，不靠大模型"编"；没有 LLM 也能完整跑通。
 Every number comes from deterministic, tested code — the LLM is optional.
@@ -64,6 +64,13 @@ print(reply.text)    # 叙述；reply.blocks 为 KPI 卡 / 图表 / 表格
 语义层之外的灵活 SQL（只读护栏校验后执行）与结果解读；**不配置或调用失败自动回退内置
 规则路由，全部功能不受影响**。
 
+**MCP server（被集成）**：统计引擎可直接挂进 Claude / 千问等任意 MCP 客户端，让宿主
+LLM 编排、本引擎算数：
+
+```bash
+ds-agent-mcp   # stdio JSON-RPC，零第三方依赖；暴露 ask / 样本量 / 知识检索 / 指标列表 5 个工具
+```
+
 ### Agent 框架设计
 
 核心原则：**LLM 可选、确定性优先**。
@@ -81,7 +88,7 @@ print(reply.text)    # 叙述；reply.blocks 为 KPI 卡 / 图表 / 表格
 1. **LLM 可选**：规则路由离线完整可用，LLM 失败零功能损失；
 2. **口径唯一**：所有工具引用同一语义层，注册指标数仓校验后全链路生效；
 3. **结论必证**：每类分析自动附检验表与置信度验证卡，可审计；
-4. **可复现**：同样问题同样答案，抽样带种子，308 个测试锁定行为；
+4. **可复现**：同样问题同样答案，抽样带种子，318 个测试锁定行为；
 5. **可扩展**：新能力经 `registry.py` 注册即成一等路由目标，免改核心代码。
 
 ### 设计理念：知识库驱动的成长型 Agent
@@ -106,7 +113,8 @@ print(reply.text)    # 叙述；reply.blocks 为 KPI 卡 / 图表 / 表格
 | `DS_AGENT_LLM_BASE_URL` / `_API_KEY` / `_MODEL` | 任意 OpenAI 兼容端点；不填走规则路由 |
 
 ```bash
-pytest -q                              # 308 个测试，覆盖统计正确性与端到端问答
+pytest -q                              # 318 个测试，覆盖统计正确性与端到端问答
+python scripts/run_benchmark.py        # 金标准评测集（18 个跨能力用例，期望值冻结）
 python examples/01_walkthrough.py      # 全部能力的完整对话
 python examples/04_custom_extension.py # 运行时注册自定义能力扩展
 ```
@@ -116,6 +124,8 @@ python examples/04_custom_extension.py # 运行时注册自定义能力扩展
 - `docs/architecture.md` — 架构与 Extension points；`docs/methodology.md` — 全部方法细节
 - `docs/statistical_tests.md` — 30+ 检验目录；`docs/metric_dictionary.md` / `business_knowledge.md` — 指标口径与知识库语料
 - `docs/market_data_agents_comparison.md` / `_en.md` — Data Agent 市场调研与竞品对比（中英双语）
+- `docs/blog_deterministic_data_agent.md` — 技术长文：为什么 Data Agent 应该是确定性的（AI 辅助撰写，人工审核中）
+- `benchmarks/golden_qa.jsonl` — 金标准评测集；`python scripts/run_benchmark.py` 一键复跑
 - `docs/demo.gif` — 六大核心场景中英双语演示
 
 ### 已知边界
@@ -191,7 +201,7 @@ User question (Web / API / CLI)
 2. **One caliber** — every tool reads the same semantic layer; registered metrics are
    warehouse-validated then live across the whole chain;
 3. **Evidence attached** — test tables and confidence cards ship with every conclusion;
-4. **Reproducible** — same question, same answer; seeded sampling; 308 tests lock behavior;
+4. **Reproducible** — same question, same answer; seeded sampling; 318 tests lock behavior;
 5. **Extensible** — new capabilities register via `registry.py` as first-class routing targets.
 
 ### Design philosophy: a knowledge-base-driven agent that grows
@@ -221,7 +231,8 @@ behavior**. Model weights unchanged; the agent gets smarter.
 | `DS_AGENT_LLM_BASE_URL` / `_API_KEY` / `_MODEL` | Any OpenAI-compatible endpoint; empty = deterministic router |
 
 ```bash
-pytest -q                              # 308 tests
+pytest -q                              # 318 tests
+python scripts/run_benchmark.py        # golden-QA benchmark (18 cases, frozen expectations)
 python examples/01_walkthrough.py      # every capability, end to end
 python examples/04_custom_extension.py # register a custom capability at runtime
 ```
@@ -231,6 +242,8 @@ python examples/04_custom_extension.py # register a custom capability at runtime
 - `docs/architecture.md` — architecture & extension points; `docs/methodology.md` — full method detail
 - `docs/statistical_tests.md` — the 30+ test catalogue; `docs/metric_dictionary.md` / `business_knowledge.md`
 - `docs/market_data_agents_comparison.md` / `_en.md` — Data Agent market research & competitor comparison (ZH/EN)
+- `docs/blog_deterministic_data_agent.md` — essay: why data agents should be deterministic (AI-drafted, human review pending)
+- `benchmarks/golden_qa.jsonl` — golden-QA benchmark; `python scripts/run_benchmark.py` to replay
 - `docs/demo.gif` — six core scenarios, fully played in both Chinese and English
 
 ### Known limits

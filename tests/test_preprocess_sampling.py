@@ -213,6 +213,24 @@ def test_agent_sampling_size_mode_without_liang_suffix():
         assert "3.00" in reply.text, question
 
 
+def test_agent_sampling_size_mean_mode():
+    """Questions mentioning a standard deviation must size in mean mode.
+
+    Regression: 「人均消费提升5元（标准差80）」 used to be parsed as a
+    proportion question (baseline 0%, mde 0.05), returning a nonsense
+    26.9M sample size. The MDE must stay in original units (5, not 0.05).
+    """
+    from ds_agent.agent import DSQueryAgent
+
+    agent = DSQueryAgent()
+    reply = agent.ask("要检验人均消费提升5元（标准差80），每组需要多少样本？")
+    assert reply.data.get("intent") == "sampling"
+    assert "标准差 σ=80" in reply.text
+    assert "δ=5（" in reply.text  # NOT 0.05 — original units preserved
+    assert "2,690" in reply.text
+    assert "26,899,004" not in reply.text
+
+
 def test_agent_sampling_draw_and_representativeness():
     from ds_agent.agent import DSQueryAgent
 

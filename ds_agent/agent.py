@@ -3236,27 +3236,46 @@ class DSQueryAgent(ReadoutHandlers):
         try:
             # ---------------------------------------------------- 1. sizing mode
             if wants_size and not wants_draw:
-                base_match = re.search(r"基线[^0-9%]*(\d+(?:\.\d+)?)\s*%|baseline[^0-9%]*(\d+(?:\.\d+)?)\s*%", q, re.I)
-                p0 = 0.70
-                if base_match:
-                    p0 = float(base_match.group(1) or base_match.group(2)) / 100.0
-                rel = bool(re.search(r"相对|relative", q, re.I))
-                mde_match = re.search(
-                    r"(?:检测|变化|差异|提升|下降|detect|change|shift|difference)[^0-9%]*(\d+(?:\.\d+)?)\s*(?:个)?\s*(?:百分点|pp|percentage points?)?",
-                    q,
-                    re.I,
-                )
-                mde = 0.03
+                # Mean mode: the question talks about a continuous metric
+                # (standard deviation / sigma). MDE stays in original units
+                # ("提升5元" -> 5), NOT divided by 100.
+                mean_mode = bool(re.search(r"标准差|std\.?\s*dev|\bstd\b|\bsd\b|sigma|σ", q, re.I))
                 noted_default = True
-                if mde_match:
-                    raw = float(mde_match.group(1)) / 100.0
-                    mde = p0 * raw if rel else raw
-                    noted_default = False
-                size = smp.sample_size_proportion(p0, mde) if p0 < 1 else smp.sample_size_mean(1.0, mde)
-                if re.search(r"标准差|std|sd of", q, re.I):
-                    sd_match = re.search(r"标准差[^0-9]*(\d+(?:\.\d+)?)|std(?:\s*dev)?[^0-9]*(\d+(?:\.\d+)?)", q, re.I)
-                    sd = float(sd_match.group(1) or sd_match.group(2)) if sd_match else 1.0
+                if mean_mode:
+                    sd_match = re.search(
+                        r"标准差[^0-9]*(\d+(?:\.\d+)?)|std(?:\s*dev)?[^0-9]*(\d+(?:\.\d+)?)|\bsd\b[^0-9]*(\d+(?:\.\d+)?)",
+                        q, re.I,
+                    )
+                    sd = 1.0
+                    if sd_match:
+                        sd = float(next(g for g in sd_match.groups() if g))
+                    mde_match = re.search(
+                        r"(?:检测|变化|差异|提升|下降|改变|detect|change|shift|difference)[^0-9]*(\d+(?:\.\d+)?)",
+                        q, re.I,
+                    )
+                    mde = 1.0
+                    if mde_match:
+                        mde = float(mde_match.group(1))
+                        noted_default = False
                     size = smp.sample_size_mean(sd, mde)
+                else:
+                    base_match = re.search(r"基线[^0-9%]*(\d+(?:\.\d+)?)\s*%|baseline[^0-9%]*(\d+(?:\.\d+)?)\s*%", q, re.I)
+                    p0 = 0.70
+                    if base_match:
+                        p0 = float(base_match.group(1) or base_match.group(2)) / 100.0
+                    rel = bool(re.search(r"相对|relative", q, re.I))
+                    mde_match = re.search(
+                        r"(?:检测|变化|差异|提升|下降|detect|change|shift|difference)[^0-9%]*(\d+(?:\.\d+)?)\s*(?:个)?\s*(?:百分点|pp|percentage points?)?",
+                        q,
+                        re.I,
+                    )
+                    mde = 0.03
+                    noted_default = True
+                    if mde_match:
+                        raw = float(mde_match.group(1)) / 100.0
+                        mde = p0 * raw if rel else raw
+                        noted_default = False
+                    size = smp.sample_size_proportion(p0, mde)
 
                 # Sensitivity row: how n reacts to a tighter/looser MDE.
                 sens_rows = []
@@ -3272,14 +3291,24 @@ class DSQueryAgent(ReadoutHandlers):
                     if noted_default
                     else ""
                 )
-                text = self._t(
-                    f"**样本量计算**{default_note}：基线 {size.get('p0', size.get('p0', 0)) * 100:.1f}%，"
-                    f"检测绝对变化 {size['mde'] * 100:.2f} 个百分点（α={size['alpha']}，功效 {size['power']:.0%}），"
-                    f"每组需要 **{size['n_per_group']:,}** 个样本，两组共 {size['n_total']:,}。",
-                    f"**Sample size**{default_note}: baseline {size.get('p0', 0) * 100:.1f}%, detect an absolute change of "
-                    f"{size['mde'] * 100:.2f}pp (α={size['alpha']}, power {size['power']:.0%}) — "
-                    f"**{size['n_per_group']:,}** per group, {size['n_total']:,} in total.",
-                )
+                if size["kind"] == "mean":
+                    text = self._t(
+                        f"**样本量计算**{default_note}：连续指标（标准差 σ={size['sd']:g}），"
+                        f"检测变化 δ={size['mde']:g}（α={size['alpha']}，功效 {size['power']:.0%}），"
+                        f"每组需要 **{size['n_per_group']:,}** 个样本，两组共 {size['n_total']:,}。",
+                        f"**Sample size**{default_note}: continuous metric (sd σ={size['sd']:g}), detect a shift of "
+                        f"δ={size['mde']:g} (α={size['alpha']}, power {size['power']:.0%}) — "
+                        f"**{size['n_per_group']:,}** per group, {size['n_total']:,} in total.",
+                    )
+                else:
+                    text = self._t(
+                        f"**样本量计算**{default_note}：基线 {size.get('p0', 0) * 100:.1f}%，"
+                        f"检测绝对变化 {size['mde'] * 100:.2f} 个百分点（α={size['alpha']}，功效 {size['power']:.0%}），"
+                        f"每组需要 **{size['n_per_group']:,}** 个样本，两组共 {size['n_total']:,}。",
+                        f"**Sample size**{default_note}: baseline {size.get('p0', 0) * 100:.1f}%, detect an absolute change of "
+                        f"{size['mde'] * 100:.2f}pp (α={size['alpha']}, power {size['power']:.0%}) — "
+                        f"**{size['n_per_group']:,}** per group, {size['n_total']:,} in total.",
+                    )
                 text += "\n\n" + self._t(
                     f"**理论依据**：{size['formula']}，其中 z_{{1-α/2}}={size['z_alpha']}、z_{{1-β}}={size['z_power']}。"
                     "依据是中心极限定理：样本均值近似服从正态分布，标准误 σ/√n 随样本量平方根收缩，"
