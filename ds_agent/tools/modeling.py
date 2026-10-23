@@ -189,14 +189,120 @@ def train_model(
     result["best_model"] = max(primary, key=primary.get)
     result["metrics"]["primary_metric"] = "roc_auc or f1" if task == "classification" else "r2"
 
-    # 5-fold CV stability of the best model on the training split.
+    # 5-fold CV stability of the best model on the training split. For binary
+    # classification the fold metric is the AUC (accuracy hides class balance).
     best = fitted[result["best_model"]]
-    cv = cross_val_score(best, X_tr, y_tr, cv=5)
+    if task == "classification" and y.nunique() == 2:
+        from sklearn.model_selection import StratifiedKFold
+
+        cv = cross_val_score(
+            best, X_tr, y_tr,
+            cv=StratifiedKFold(5, shuffle=True, random_state=random_state),
+            scoring="roc_auc",
+        )
+    else:
+        cv = cross_val_score(best, X_tr, y_tr, cv=5)
     result["cv_mean"] = round(float(cv.mean()), 4)
     result["cv_std"] = round(float(cv.std()), 4)
+
+    # ---- closed loop: baseline, leakage screen, calibration -----------------
+    result["baseline"] = strong_baseline(y_tr, y_te, task)
+    result["leakage"] = check_leakage(X, y)
+    if task == "classification" and y.nunique() == 2 and hasattr(fitted[result["best_model"]], "predict_proba"):
+        proba = fitted[result["best_model"]].predict_proba(X_te)[:, 1]
+        result["calibration"] = calibration_report(np.asarray(y_te), proba)
     result["_fitted"] = fitted
     result["_split"] = (X_tr, X_te, y_tr, y_te)
     return result
+
+
+# ------------------------------------------------------------ validation suite
+def check_leakage(X: pd.DataFrame, y: pd.Series) -> List[Dict[str, Any]]:
+    """Screen features for target leakage before anything is trusted.
+
+    Three signals: ID-like columns (unique keys memorise rows), proxy
+    features (near-perfect correlation with the label), and post-outcome
+    naming (columns that can only exist after the label was written).
+    """
+    import re
+
+    flags: List[Dict[str, Any]] = []
+    n = len(X)
+    y_num = pd.to_numeric(y, errors="coerce")
+    id_re = re.compile(r"(^|_)(id|uuid|guid|sn|serial|order_no|user_id)(_|$)", re.I)
+    after_re = re.compile(r"(后|事后|之后|_post|post_|_after|after_|cum_|累计)", re.I)
+    for col in X.columns:
+        s = X[col]
+        reasons: List[str] = []
+        if id_re.search(str(col)) and n and s.nunique(dropna=True) / n > 0.9:
+            reasons.append("ID-like key: unique per row, memorises the label")
+        if pd.api.types.is_numeric_dtype(s) and y_num.notna().sum() > 10:
+            corr = s.corr(y_num)
+            if corr is not None and abs(corr) > 0.95:
+                reasons.append(f"proxy feature: |corr| with target = {abs(corr):.3f}")
+        if after_re.search(str(col)):
+            reasons.append("post-outcome naming: may only exist after the label")
+        if reasons:
+            flags.append({"feature": str(col), "reasons": reasons, "action": "exclude or justify"})
+    return flags
+
+
+def strong_baseline(y_tr: pd.Series, y_te: pd.Series, task: str) -> Dict[str, Any]:
+    """The baseline any real model must beat, stated as numbers not words."""
+    y_tr, y_te = pd.Series(y_tr), pd.Series(y_te)
+    if task == "classification":
+        majority = y_tr.mode().iloc[0]
+        acc = float((y_te == majority).mean())
+        return {
+            "model": "majority class",
+            "accuracy": round(acc, 4),
+            "prevalence": round(float(y_tr.mean()) if y_tr.dtype != object else 0.0, 4),
+            "note": "a candidate model must clear this accuracy to be worth deploying",
+        }
+    mean_pred = float(y_tr.mean())
+    rmse = float(np.sqrt(np.mean((y_te - mean_pred) ** 2)))
+    ss_res = float(np.sum((y_te - mean_pred) ** 2))
+    ss_tot = float(np.sum((y_te - y_te.mean()) ** 2)) or 1.0
+    return {
+        "model": "mean predictor",
+        "rmse": round(rmse, 4),
+        "r2_vs_test_mean": round(1 - ss_res / ss_tot, 4),
+        "note": "a candidate model must beat this RMSE to be worth deploying",
+    }
+
+
+def calibration_report(y_true: np.ndarray, proba: np.ndarray, n_bins: int = 10) -> Dict[str, Any]:
+    """Probability calibration: are predicted 70%s right 70% of the time?
+
+    Brier score (lower is better) and expected calibration error over equal-
+    width bins; per-bin (mean predicted vs observed rate) feeds the
+    reliability chart. miscalibrated scores mislead every downstream
+    threshold decision, even when the AUC looks fine.
+    """
+    from sklearn.metrics import brier_score_loss
+
+    y_true = np.asarray(y_true, dtype=float)
+    proba = np.asarray(proba, dtype=float)
+    edges = np.linspace(0.0, 1.0, n_bins + 1)
+    idx = np.clip(np.digitize(proba, edges) - 1, 0, n_bins - 1)
+    bins = []
+    ece = 0.0
+    for b in range(n_bins):
+        mask = idx == b
+        if not mask.any():
+            continue
+        mean_pred = float(proba[mask].mean())
+        frac_pos = float(y_true[mask].mean())
+        weight = float(mask.mean())
+        ece += weight * abs(frac_pos - mean_pred)
+        bins.append({"bin": f"[{edges[b]:.1f}-{edges[b+1]:.1f})", "n": int(mask.sum()),
+                     "mean_predicted": round(mean_pred, 4), "observed_rate": round(frac_pos, 4)})
+    return {
+        "brier": round(float(brier_score_loss(y_true, proba)), 4),
+        "ece": round(ece, 4),
+        "well_calibrated": bool(ece < 0.05),
+        "bins": bins,
+    }
 
 
 # ---------------------------------------------------------------- explanations

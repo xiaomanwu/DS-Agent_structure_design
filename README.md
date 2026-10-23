@@ -46,7 +46,8 @@ Every number comes from deterministic, tested code — the LLM is optional.
 | **实验科学** | 15 种实验设计（AB / switchback / 序贯 / 反转 / 父子 / 双边市场…）；读数含 SRM、CUPED、BH-FDR、分群异质性；敏感性分析套件；置信度验证卡 | 「设计一个转化率实验」「看下这个 AB 实验的结果」 |
 | **因果推断** | DiD(TWFE)、PSM、IPW/AIPW、合成控制、断点回归、中断时序、Uplift 因果森林（Qini）；DoWhy 开源引擎交叉验证 + 安慰剂反驳检验 | 「用双重差分评估补贴政策的影响」 |
 | **抽样调查** | Cochran 样本量（比例/均值 + 敏感性表）；简单随机/系统/分层抽样（可复现）；标准误、95% CI、代表性检验（卡方 / Welch t / KS） | 「基线70%检测3个百分点，需要多少样本？」 |
-| **建模分析** | 四段流水线（回归与因果共用）：预处理（缺失值/NaN）→ 特征工程（独热 + 共线性剪枝 \|r\|>0.95、VIF>10）→ 分类/回归 CV 择优 → 事后 SHAP / 置换重要性 | 「训练分类模型预测用户是否转化」 |
+| **建模分析** | 端到端闭环（回归与因果共用预处理）：标签定义与泄漏检查 → 预处理（缺失值/NaN）→ 特征工程（独热 + 共线性剪枝 \|r\|>0.95、VIF>10）→ 强基线 → 分层 5 折 CV + 留出检验 + 概率校准（Brier/ECE）→ 事后 SHAP / 置换重要性 | 「训练分类模型预测用户是否转化」 |
+| **模型监控** | 上线体检：特征漂移 PSI 分级（>0.10 警告 / >0.25 重训）、数据漂移 KS 检验、性能衰减（分层 AUC 趋势）、告警清单与重训建议 | 「检查转化模型的特征漂移和性能衰减」 |
 | **交付与引导** | 一键独立 HTML 监控看板；结论先行的 Markdown + HTML 周报；方法选型决策树顾问；30+ 统计检验理论卡随结论自动附表 | 「生成一个 GMV 监控看板」「这个场景该用什么方法？」 |
 
 追问继承上下文；接入外部数据源只需说「关联数据源 <文件/连接串>」（数据库：DuckDB/SQLite/Postgres/MySQL，表格：CSV/Excel/Parquet/JSON）。
@@ -108,7 +109,7 @@ ds-agent-mcp   # stdio JSON-RPC，零第三方依赖；暴露 ask / 样本量 / 
 3. **规则路由零依赖兜底**：不配 LLM 或调用失败，意图识别回退关键词打分，功能零损失；
 4. **口径唯一**：所有工具引用同一语义层，注册指标数仓校验后全链路生效；
 5. **结论必证**：每类分析自动附检验表与置信度验证卡，可审计；
-6. **可复现**：同样问题同样答案，抽样带种子，321 个测试锁定行为；
+6. **可复现**：同样问题同样答案，抽样带种子，335 个测试锁定行为；
 7. **可扩展**：新能力经 `registry.py` 注册即成一等路由目标，免改核心代码。
 
 ### 设计理念：知识库驱动的成长型 Agent
@@ -133,9 +134,10 @@ ds-agent-mcp   # stdio JSON-RPC，零第三方依赖；暴露 ask / 样本量 / 
 | `DS_AGENT_LLM_BASE_URL` / `_API_KEY` / `_MODEL` | 任意 OpenAI 兼容端点；不填走规则路由 |
 
 ```bash
-pytest -q                              # 321 个测试，覆盖统计正确性与端到端问答
+pytest -q                              # 335 个测试，覆盖统计正确性与端到端问答
 python scripts/run_benchmark.py        # 金标准评测集（18 个跨能力用例，期望值冻结）
 python examples/01_walkthrough.py      # 全部能力的完整对话
+python examples/06_causal_robustness_demo.py # 因果全链路：假设/检验/稳健性/敏感性/结论
 python examples/04_custom_extension.py # 运行时注册自定义能力扩展
 ```
 
@@ -143,6 +145,7 @@ python examples/04_custom_extension.py # 运行时注册自定义能力扩展
 
 - `docs/architecture.md` — 架构与 Extension points；`docs/methodology.md` — 全部方法细节
 - `docs/statistical_tests.md` — 30+ 检验目录；`docs/testing.md` — 测试分类目录与去重方法；`docs/metric_dictionary.md` / `business_knowledge.md` — 指标口径与知识库语料
+- `docs/production_design.md` — 进入生产环境后设计模式的差异；`docs/deployment.md` — API 端点、并发模型与部署（含 Dockerfile）
 - `docs/market_data_agents_comparison.md` / `_en.md` — Data Agent 市场调研与竞品对比（中英双语）
 - `docs/blog_deterministic_data_agent.md` — 技术长文：为什么 Data Agent 应该是确定性的（AI 辅助撰写，人工审核中）
 - `benchmarks/golden_qa.jsonl` — 金标准评测集；`python scripts/run_benchmark.py` 一键复跑
@@ -171,7 +174,8 @@ python examples/04_custom_extension.py # 运行时注册自定义能力扩展
 | **Experiment science** | 15 experiment archetypes (A/B, switchback, sequential, reversal, parent-child, two-sided market…); readouts with SRM, CUPED, BH-FDR, segment heterogeneity; sensitivity suite; confidence-validation cards | "Design a conversion experiment" · "Read out this AB test" |
 | **Causal inference** | DiD (TWFE), PSM, IPW/AIPW, synthetic control, RDD, interrupted time series, uplift causal forests (Qini); DoWhy cross-validation with placebo refutation tests | "Evaluate the subsidy policy on city GMV with DiD" |
 | **Survey sampling** | Cochran sample size (proportion/mean + sensitivity table); SRS/systematic/stratified draws (seeded); SE, 95% CI, representativeness tests (chi-square / Welch t / KS) | "Baseline 70%, detect 3pp — how many samples?" |
-| **Modelling** | Four-stage pipeline (shared with causal): preprocessing (missing values) → feature engineering (one-hot + collinearity pruning \|r\|>0.95, VIF>10) → classification/regression with CV → post-model SHAP / permutation importance | "Train a classifier to predict conversion" |
+| **Modelling** | End-to-end loop (shares preprocessing with causal): label definition & leakage screen → preprocessing (missing values) → feature engineering (one-hot + collinearity pruning \|r\|>0.95, VIF>10) → strong baseline → stratified 5-fold CV + held-out test + probability calibration (Brier/ECE) → post-model SHAP / permutation importance | "Train a classifier to predict conversion" |
+| **Model monitoring** | Post-launch checkup: feature drift via banded PSI (>0.10 warn / >0.25 retrain), data drift via KS tests, performance decay (cohort AUC trend), alert list and retrain advice | "Check the model for feature drift and performance decay" |
 | **Delivery & guidance** | One-click standalone HTML dashboard; conclusion-first Markdown + HTML reports; method-selection decision-tree advisor; 30+ statistical-test theory cards auto-attached to conclusions | "Generate a GMV monitoring dashboard" · "Which method fits?" |
 
 Follow-ups keep context. Attach external sources by saying "attach data source <file/conn>"
@@ -234,7 +238,7 @@ User question (Web / API / CLI)
 4. **One caliber** — every tool reads the same semantic layer; registered metrics are
    warehouse-validated then live across the whole chain;
 5. **Evidence attached** — test tables and confidence cards ship with every conclusion;
-6. **Reproducible** — same question, same answer; seeded sampling; 321 tests lock behavior;
+6. **Reproducible** — same question, same answer; seeded sampling; 335 tests lock behavior;
 7. **Extensible** — new capabilities register via `registry.py` as first-class routing targets.
 
 ### Design philosophy: a knowledge-base-driven agent that grows
@@ -264,9 +268,10 @@ behavior**. Model weights unchanged; the agent gets smarter.
 | `DS_AGENT_LLM_BASE_URL` / `_API_KEY` / `_MODEL` | Any OpenAI-compatible endpoint; empty = deterministic router |
 
 ```bash
-pytest -q                              # 321 tests
+pytest -q                              # 335 tests
 python scripts/run_benchmark.py        # golden-QA benchmark (18 cases, frozen expectations)
 python examples/01_walkthrough.py      # every capability, end to end
+python examples/06_causal_robustness_demo.py # full causal chain: assumptions → tests → robustness → sensitivity → conclusion
 python examples/04_custom_extension.py # register a custom capability at runtime
 ```
 
@@ -274,6 +279,7 @@ python examples/04_custom_extension.py # register a custom capability at runtime
 
 - `docs/architecture.md` — architecture & extension points; `docs/methodology.md` — full method detail
 - `docs/statistical_tests.md` — the 30+ test catalogue; `docs/testing.md` — test taxonomy & dedup method; `docs/metric_dictionary.md` / `business_knowledge.md`
+- `docs/production_design.md` — what changes in production; `docs/deployment.md` — API endpoints, concurrency & deployment (Dockerfile included)
 - `docs/market_data_agents_comparison.md` / `_en.md` — Data Agent market research & competitor comparison (ZH/EN)
 - `docs/blog_deterministic_data_agent.md` — essay: why data agents should be deterministic (AI-drafted, human review pending)
 - `benchmarks/golden_qa.jsonl` — golden-QA benchmark; `python scripts/run_benchmark.py` to replay

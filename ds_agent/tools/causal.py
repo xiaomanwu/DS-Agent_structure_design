@@ -382,6 +382,7 @@ def propensity_score_matching(
         "n_matched_pairs": len(pairs),
         "caliper": caliper_width,
         "att_test": {"t": float(att_t), "p_value": float(att_p), "n_pairs": len(pairs)},
+        "pair_diffs": (t_vals - c_vals).tolist(),
         "pruned_covariates": pruned,
         "covariates_used": used_covariates,
         "balance": balance,
@@ -623,3 +624,133 @@ def compare_estimators(
         "robust": bool(ests and (max(ests) - min(ests)) / abs(np.mean(ests)) < 0.5) if ests and np.mean(ests) else False,
     }
     return out
+
+
+def placebo_refutation(
+    df: pd.DataFrame,
+    treatment: str,
+    outcome: str,
+    covariates: Sequence[str],
+    n_placebo: int = 12,
+    seed: int = 0,
+) -> Dict[str, object]:
+    """Refutation by fake treatment: shuffle labels, the effect must vanish.
+
+    The estimator is re-run on permuted treatment assignments. A valid
+    identification strategy returns ATTs centred on zero; if the placebo
+    distribution reaches the real estimate, the "effect" was an artefact of
+    the covariate mix rather than the treatment.
+    """
+    rng = np.random.default_rng(seed)
+    shuffled = df.copy()
+    placebo_atts = []
+    for _ in range(n_placebo):
+        shuffled[treatment] = rng.permutation(shuffled[treatment].to_numpy())
+        try:
+            res = propensity_score_matching(
+                shuffled, treatment, outcome, covariates, n_bootstrap=10, seed=seed
+            )
+            placebo_atts.append(float(res["att"]))
+        except Exception:  # noqa: BLE001 - a shrunken placebo pool is expected
+            continue
+    if not placebo_atts:
+        return {"error": "no placebo run succeeded", "robust": None}
+    lo, hi = float(np.quantile(placebo_atts, 0.05)), float(np.quantile(placebo_atts, 0.95))
+    real = float(
+        propensity_score_matching(df, treatment, outcome, covariates, n_bootstrap=10, seed=seed)["att"]
+    )
+    # The real effect should sit outside (or at the extreme tail of) the placebo band.
+    outside = real < lo or real > hi
+    return {
+        "n_placebo": len(placebo_atts),
+        "placebo_mean": float(np.mean(placebo_atts)),
+        "placebo_ci": (lo, hi),
+        "real_att": real,
+        "placebo_max_abs": float(np.max(np.abs(placebo_atts))),
+        "robust": bool(outside and abs(real) > abs(float(np.mean(placebo_atts)))),
+        "narrative": (
+            f"{len(placebo_atts)} placebo runs (shuffled treatment) give ATT "
+            f"{np.mean(placebo_atts):+.4g} [90% range {lo:+.4g}..{hi:+.4g}]; the real ATT {real:+.4g} "
+            + ("stays outside the placebo band." if outside else "falls INSIDE the placebo band — the estimate is not separable from noise.")
+        ),
+    }
+
+
+def rosenbaum_bounds(
+    pair_diffs: np.ndarray, gammas: Sequence[float] = (1.0, 1.5, 2.0, 2.5, 3.0)
+) -> List[Dict[str, object]]:
+    """Wilcoxon signed-rank sensitivity to hidden bias (Rosenbaum bounds).
+
+    Gamma is the odds ratio an unobserved confounder could distort treatment
+    assignment by. Each rank's probability of being positive ranges over
+    [1/(1+Gamma), Gamma/(1+Gamma)]; the bounds are normal approximations of
+    the signed-rank statistic under the worst-case weighting.
+    """
+    diffs = np.asarray(pair_diffs, dtype=float)
+    diffs = diffs[diffs != 0]
+    n = len(diffs)
+    if n < 5:
+        return []
+    ranks = stats.rankdata(np.abs(diffs))
+    t_plus = float(ranks[diffs > 0].sum())
+    rows = []
+    for gamma in gammas:
+        p_hi = gamma / (1.0 + gamma)  # worst case: confounder pushes toward positive
+        p_lo = 1.0 / (1.0 + gamma)
+        mean_hi = p_hi * ranks.sum()
+        sd_hi = float(np.sqrt((ranks**2 * p_hi * (1 - p_hi)).sum()))
+        mean_lo = p_lo * ranks.sum()
+        sd_lo = float(np.sqrt((ranks**2 * p_lo * (1 - p_lo)).sum()))
+        p_upper = float(stats.norm.sf((t_plus - mean_hi - 0.5) / sd_hi))   # evidence could die
+        p_lower = float(stats.norm.sf((t_plus - mean_lo - 0.5) / sd_lo))   # evidence survives
+        rows.append(
+            {
+                "gamma": float(gamma),
+                "p_lower": p_lower,
+                "p_upper": p_upper,
+                "survives": bool(p_upper < 0.05),
+            }
+        )
+    return rows
+
+
+def method_selection_advice(psm: Dict[str, object]) -> List[Dict[str, str]]:
+    """Rule-based next-method advice when a matching assumption fails."""
+    advice: List[Dict[str, str]] = []
+    support = psm.get("common_support", {}) or {}
+    balance = psm.get("balance", []) or []
+    n_unbalanced = sum(1 for b in balance if not b.get("balanced", True))
+    share_out = float(support.get("share_outside", 0.0) or 0.0)
+
+    if share_out > 0.05:
+        advice.append(
+            {
+                "situation": f"{share_out:.1%} treated units lack common support",
+                "zh": f"{share_out:.1%} 的处理组个体落在共同支撑区外 → 先按倾向得分修剪（trimming）或改用 IPW+截断权重；极端选择机制下改断点回归（RDD）。",
+                "en": f"{share_out:.1%} of treated units fall outside common support → trim by propensity score or switch to IPW with truncated weights; under extreme selection prefer RDD.",
+            }
+        )
+    if n_unbalanced:
+        advice.append(
+            {
+                "situation": f"{n_unbalanced} covariates remain unbalanced after matching",
+                "zh": f"匹配后仍有 {n_unbalanced} 个协变量不平衡（|SMD|>0.1）→ 收紧卡尺、改 1:k 有放回匹配，或把这些协变量直接塞进结果回归（回归调整）。",
+                "en": f"{n_unbalanced} covariates stay unbalanced (|SMD|>0.1) → tighten the caliper, use 1:k matching with replacement, or residualise via regression adjustment.",
+            }
+        )
+    if not advice:
+        advice.append(
+            {
+                "situation": "assumptions hold",
+                "zh": "平衡性与重叠性均通过 → 维持 PSM 结论；若处理是面板内政策，可叠加 DiD 做双重稳健互证。",
+                "en": "Balance and overlap pass → keep the PSM conclusion; for panel policies, cross-check with DiD.",
+            }
+        )
+    advice.append(
+        {
+            "situation": "unmeasured confounding suspected",
+            "zh": "存在无法观测的混杂（如内部用户分）→ 敏感性用 Rosenbaum 边界量化；识别上改差分中的差分或工具变量，不要只靠匹配。",
+            "en": "Unmeasured confounding suspected (e.g. internal user tier) → quantify with Rosenbaum bounds; identify via DiD or an instrument, not matching alone.",
+        }
+    )
+    return advice

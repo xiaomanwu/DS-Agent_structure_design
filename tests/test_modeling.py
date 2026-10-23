@@ -102,3 +102,78 @@ def test_regression_has_direction_and_charts(reg_result):
     pred = reg_result["predictions"][reg_result["best_model"]]
     img2 = charts.pred_vs_actual_chart(y_te, pred)
     assert img2.startswith("data:image/png;base64,")
+
+
+# ------------------------------------------------- closed-loop validation
+def test_check_leakage_flags_ids_proxies_and_post_outcome():
+    import numpy as np
+    import pandas as pd
+
+    from ds_agent.tools.modeling import check_leakage
+
+    rng = np.random.default_rng(0)
+    n = 500
+    y = pd.Series(rng.integers(0, 2, n))
+    X = pd.DataFrame(
+        {
+            "user_id": np.arange(n),
+            "spend": rng.normal(100, 10, n),
+            "y_copy": y * 1.0 + rng.normal(0, 0.01, n),
+            "revenue_after": rng.normal(50, 5, n),
+        }
+    )
+    flags = {f["feature"] for f in check_leakage(X, y)}
+    assert "user_id" in flags
+    assert "y_copy" in flags
+    assert "revenue_after" in flags
+    assert "spend" not in flags
+
+
+def test_strong_baseline_majority_and_mean():
+    import numpy as np
+    import pandas as pd
+
+    from ds_agent.tools.modeling import strong_baseline
+
+    y_tr = pd.Series([1] * 70 + [0] * 30)
+    y_te = pd.Series([1] * 60 + [0] * 40)
+    bl = strong_baseline(y_tr, y_te, "classification")
+    assert bl["model"] == "majority class"
+    assert bl["accuracy"] == 0.6
+
+    y_tr = pd.Series(np.full(50, 10.0) + np.random.default_rng(1).normal(0, 2, 50))
+    y_te = pd.Series(np.full(20, 10.0) + np.random.default_rng(2).normal(0, 2, 20))
+    rb = strong_baseline(y_tr, y_te, "regression")
+    assert rb["model"] == "mean predictor"
+    assert rb["rmse"] > 0
+
+
+def test_calibration_report_brier_and_bins():
+    import numpy as np
+
+    from ds_agent.tools.modeling import calibration_report
+
+    rng = np.random.default_rng(3)
+    proba = rng.uniform(0.3, 0.7, 2000)
+    y = (rng.uniform(size=2000) < proba).astype(float)
+    rep = calibration_report(y, proba)
+    assert 0 < rep["brier"] < 0.25
+    assert rep["well_calibrated"] is True
+    assert len(rep["bins"]) >= 4
+    assert all("mean_predicted" in b and "observed_rate" in b for b in rep["bins"])
+
+
+def test_train_model_binary_uses_auc_cv_and_attaches_loop_payloads():
+    import numpy as np
+    import pandas as pd
+
+    from ds_agent.tools.modeling import train_model
+
+    rng = np.random.default_rng(5)
+    n = 1200
+    X = pd.DataFrame({"x1": rng.normal(size=n), "x2": rng.normal(size=n)})
+    y = pd.Series((X["x1"] + 0.3 * rng.normal(size=n) > 0).astype(int))
+    res = train_model(X, y, task="classification")
+    assert "baseline" in res and res["baseline"]["model"] == "majority class"
+    assert "leakage" in res and "calibration" in res
+    assert 0.4 <= res["cv_mean"] <= 1.0

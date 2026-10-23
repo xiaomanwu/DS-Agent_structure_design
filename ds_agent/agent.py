@@ -220,6 +220,12 @@ CAPABILITIES: Dict[str, Dict[str, str]] = {
         "example_zh": "训练一个预测用户是否转化的分类模型，看特征重要性",
         "example_en": "Train a classifier to predict conversion and show feature importance",
     },
+    "monitoring": {
+        "zh": "模型监控：上线后的三项衰减检查——特征漂移（PSI 分级告警）、数据漂移（KS 检验）、性能衰减（分层 AUC 趋势），带 warn/critical 阈值与重训建议",
+        "en": "Model monitoring: three post-launch decay checks — feature drift (banded PSI), data drift (KS tests), performance decay (cohort AUC trend) — with warn/critical thresholds and retrain advice",
+        "example_zh": "检查转化模型的特征漂移和性能衰减",
+        "example_en": "Check the conversion model for feature drift and performance decay",
+    },
     "dashboard": {
         "zh": "看板能力：一键生成独立 HTML 监控看板（KPI 环比卡、趋势与均线、渠道/设备拆解、退款率、近期异动表），数字与 Agent 查询同源同口径",
         "en": "Dashboard: one-click standalone HTML monitoring view (KPI cards with WoW, trend + moving average, channel/device breakdowns, refund rate, recent anomalies) — same source and calibers as agent answers",
@@ -567,6 +573,11 @@ class DSQueryAgent(ReadoutHandlers):
         if re.search(r"看板|大屏|监控页|仪表盘|dashboard|monitoring page", q, re.I):
             scores["dashboard"] += 9
 
+        # Model monitoring: explicit post-launch checks. Must outrank generic
+        # "模型" hits (which route to training).
+        if re.search(r"模型监控|数据漂移|特征漂移|性能衰减|模型衰减|概念漂移|\bpsi\b|\bdrift\b|performance decay|model monitoring", q, re.I):
+            scores["monitoring"] += 9
+
         # Metric dictionary: registration/management verbs must outrank the
         # knowledge intent (which also matches "如何定义"). "口径是什么" stays
         # knowledge; explicit register/list/deprecate verbs go to the dictionary.
@@ -772,6 +783,7 @@ class DSQueryAgent(ReadoutHandlers):
             "causal_oss": self._causal_oss,
             "dl_anomaly": self._handle_dl_anomaly,
             "modeling": self._handle_modeling,
+            "monitoring": self._handle_monitoring,
             "dashboard": self._handle_dashboard,
             "report": self._handle_report,
             "help": self._handle_help,
@@ -2955,6 +2967,86 @@ class DSQueryAgent(ReadoutHandlers):
         except Exception:  # noqa: BLE001
             panel = None
 
+        # Robustness & sensitivity: fake-treatment refutation, Rosenbaum bounds
+        # on hidden bias, and rule-based method switching when assumptions fail.
+        from .tools.causal import method_selection_advice as _method_advice
+        from .tools.causal import placebo_refutation as _placebo_refutation
+        from .tools.causal import rosenbaum_bounds as _rosenbaum_bounds
+
+        placebo = None
+        try:
+            placebo = _placebo_refutation(df, "promo", "post_revenue", covariates, n_placebo=8)
+        except Exception:  # noqa: BLE001 - diagnostics must never fail the answer
+            pass
+        rosenbaum = []
+        try:
+            diffs_arr = np.asarray(psm.get("pair_diffs") or [], dtype=float)
+            if diffs_arr.size:
+                rosenbaum = _rosenbaum_bounds(diffs_arr)
+        except Exception:  # noqa: BLE001
+            rosenbaum = []
+        advice = _method_advice(psm)
+
+        if placebo and placebo.get("robust") is not None:
+            blocks.append(
+                self._table_block(
+                    pd.DataFrame(
+                        [
+                            [self._t("真实 ATT", "Real ATT"), _fmt_num(placebo["real_att"])],
+                            [self._t("安慰剂均值", "Placebo mean"), _fmt_num(placebo["placebo_mean"])],
+                            [
+                                self._t("安慰剂 90% 区间", "Placebo 90% range"),
+                                f"[{_fmt_num(placebo['placebo_ci'][0])}, {_fmt_num(placebo['placebo_ci'][1])}]",
+                            ],
+                            [
+                                self._t("结论", "Verdict"),
+                                self._t(
+                                    "真实效应在安慰剂带之外 — 反驳检验通过",
+                                    "real effect outside the placebo band — refutation passed",
+                                )
+                                if placebo["robust"]
+                                else self._t(
+                                    "真实效应落在安慰剂带内 — 估计不可分离于噪声",
+                                    "real effect INSIDE the placebo band — not separable from noise",
+                                ),
+                            ],
+                        ],
+                        columns=[self._t("反驳检验", "Placebo refutation"), self._t("结果", "Result")],
+                    ),
+                    self._t("稳健性检验：安慰剂反驳（打乱处理标签）", "Robustness: placebo refutation (shuffled treatment)"),
+                )
+            )
+        if rosenbaum:
+            blocks.append(
+                self._table_block(
+                    pd.DataFrame(
+                        [
+                            [f"Γ={r['gamma']}", f"{r['p_lower']:.4f}", f"{r['p_upper']:.4f}", "OK" if r["survives"] else "FAIL"]
+                            for r in rosenbaum
+                        ],
+                        columns=[
+                            self._t("混杂强度", "Hidden bias Γ"),
+                            "p lower",
+                            "p upper",
+                            self._t("显著性存续", "survives p<.05"),
+                        ],
+                    ),
+                    self._t(
+                        "敏感性分析：Rosenbaum 边界（不可观测混杂最多使处理分配优势比扩大 Γ）",
+                        "Sensitivity: Rosenbaum bounds (unobserved confounding up to odds ratio Γ)",
+                    ),
+                )
+            )
+        blocks.append(
+            self._table_block(
+                pd.DataFrame(
+                    [[a["situation"], a["zh"] if self.lang == "zh" else a["en"]] for a in advice],
+                    columns=[self._t("假设情形", "Assumption status"), self._t("方法选择", "What to do instead")],
+                ),
+                self._t("假设不满足时的方法选择", "Method selection when assumptions fail"),
+            )
+        )
+
         # Feature analysis AFTER the causal model: once the effect estimate is
         # validated, SHAP/permutation on outcome ~ covariates + treatment shows
         # which features drive the outcome — and how much the treatment adds
@@ -2983,6 +3075,16 @@ class DSQueryAgent(ReadoutHandlers):
             pass
 
         lines = [
+            self._t(
+                f"**问题定义**：估计促销曝光（promo）对用户次月收入（post_revenue）的因果效应（ATT）。"
+                f"非随机分配 → 需处理选择偏差。**假设**：① 条件可忽略性——给定协变量（{', '.join(covariates)}），"
+                f"曝光近似随机；② 重叠性——每组用户都有可比的另一组个体；③ SUTVA——用户间无溢出。"
+                f"①③不可检验，靠设计论证；②可用数据诊断。",
+                f"**Problem**: estimate the causal effect (ATT) of promo exposure on next-month revenue (post_revenue). "
+                f"Exposure is not randomised, so selection bias must be removed. **Assumptions**: (1) conditional "
+                f"ignorability given {', '.join(covariates)}; (2) overlap — every treated user has comparable controls; "
+                f"(3) SUTVA — no spillovers. (1)/(3) are argued from design; (2) is diagnosable from data.",
+            ),
             self._t(
                 f"**为什么不能直接比均值**：促销曝光不是随机的（高价值用户更容易被选中），朴素差异 "
                 f"{_fmt_num(naive)} 把选择偏差也算成了效果。",
@@ -3047,6 +3149,36 @@ class DSQueryAgent(ReadoutHandlers):
                 )
             )
         lines.append(verdict_line(conf["verdict"], self.lang))
+
+        # Conclusion with uncertainty + hidden-bias robustness (after all the
+        # diagnostics above, so the numbers it quotes are the validated ones).
+        gammas_ok = [r for r in rosenbaum if r["survives"]]
+        gamma_max = max((r["gamma"] for r in gammas_ok), default=0)
+        att_val = atts.get("psm", {}).get("att")
+        ci_lo, ci_hi = atts.get("psm", {}).get("ci", (float("nan"), float("nan")))
+        monthly = att_val * psm.get("n_treated", 0) if att_val is not None else None
+        lines.append(
+            self._t(
+                f"**结论与不确定性**：促销使被曝光用户的月收入平均提高 **{_fmt_num(att_val)}**"
+                f"（bootstrap 95% CI [{_fmt_num(ci_lo)}, {_fmt_num(ci_hi)}]，p={atts.get('psm', {}).get('p_value', float('nan')):.3f}）。"
+                f"业务含义：按处理组 {psm.get('n_treated', 0):,} 人折算，月增量收入约 "
+                f"{'¥%s' % format(round(monthly), ',') if monthly is not None else '-'}；"
+                f"该结论仅对与处理组可比的人群成立（共同支撑区内）。",
+                f"**Conclusion & uncertainty**: promo lifts monthly revenue per exposed user by **{_fmt_num(att_val)}** "
+                f"(bootstrap 95% CI [{_fmt_num(ci_lo)}, {_fmt_num(ci_hi)}], p={atts.get('psm', {}).get('p_value', float('nan')):.3f}). "
+                f"Business read: ≈¥{format(round(monthly), ',') if monthly is not None else '-'} incremental revenue per month across "
+                f"{psm.get('n_treated', 0):,} treated users; valid only within the common-support population.",
+            )
+        )
+        if rosenbaum:
+            lines.append(
+                self._t(
+                    f"**对隐藏混杂的稳健性**：结论在 Γ≤{gamma_max:g} 内保持显著——即未观测混杂需把处理分配的优势比拉大到 "
+                    f"{gamma_max:g} 倍以上才能推翻结果。",
+                    f"**Hidden-bias robustness**: significance survives up to Γ={gamma_max:g} — an unobserved confounder "
+                    f"would need to distort assignment odds by more than {gamma_max:g}x to overturn the result.",
+                )
+            )
         self._record(
             self._t(
                 f"匹配估计：朴素差异 {_fmt_num(naive)}，PSM {_fmt_num(atts.get('psm', {}).get('att'))}，"
@@ -3574,6 +3706,65 @@ class DSQueryAgent(ReadoutHandlers):
             )
 
             result = train_model(X, y, task="classification" if wants_classification else "regression")
+            best = result["best_model"]
+
+            # ③ Label definition + leakage screen: what is being predicted and
+            # whether any feature could only exist after the label was written.
+            y_ser = pd.Series(y)
+            if wants_classification:
+                label_rows = [[target, self._t("二分类", "binary"), f"{y_ser.mean():.1%}", f"n={len(y_ser):,}"]]
+            else:
+                label_rows = [
+                    [target, self._t("回归", "regression"), f"{y_ser.min():.4g} ~ {y_ser.max():.4g}", f"n={len(y_ser):,}"]
+                ]
+            blocks.append(
+                self._table_block(
+                    pd.DataFrame(
+                        label_rows,
+                        columns=[self._t("标签", "label"), self._t("类型", "type"), self._t("正例率/范围", "positives / range"), "n"],
+                    ),
+                    self._t("③ 标签定义", "3. Label definition"),
+                )
+            )
+            leak_rows = [
+                {"feature": f["feature"], "reasons": "; ".join(f["reasons"]), "action": f["action"]}
+                for f in result.get("leakage", [])
+            ][:6]
+            if not leak_rows:
+                leak_rows = [
+                    {
+                        "feature": self._t("（无）", "(none)"),
+                        "reasons": self._t(
+                            "未发现 ID 型主键、目标代理特征（|r|>0.95）或事后命名特征",
+                            "no ID keys, target proxies (|r|>0.95) or post-outcome names",
+                        ),
+                        "action": "-",
+                    }
+                ]
+            blocks.append(
+                self._table_block(
+                    pd.DataFrame(leak_rows),
+                    self._t("③ 特征泄漏检查", "3. Feature-leakage screen"),
+                )
+            )
+
+            # ④ Strong baseline: a candidate model is only interesting if it
+            # beats the dumbest sensible predictor, by a stated margin.
+            bl = result.get("baseline", {})
+            bl_val = bl.get("accuracy", bl.get("rmse", "-"))
+            blocks.append(
+                self._table_block(
+                    pd.DataFrame(
+                        [
+                            [bl.get("model", "-"), bl_val, bl.get("prevalence", "-") if wants_classification else bl.get("r2_vs_test_mean", "-")],
+                            [self._t("最优模型", "best model"), best, self._t(f"见下方指标", "see metrics below")],
+                        ],
+                        columns=[self._t("模型", "model"), self._t("主指标", "primary"), self._t("备注", "note")],
+                    ),
+                    self._t("④ 强基线对比", "4. Strong baseline"),
+                )
+            )
+
             fa = feature_analysis(result)
             conf = modeling_confidence(result)
             best = result["best_model"]
@@ -3582,24 +3773,48 @@ class DSQueryAgent(ReadoutHandlers):
             metric_lines = ", ".join(f"{k}={v}" for k, v in metrics.items())
             n_pre = len(pre_log.get("steps", []))
             n_col = len(col_log.get("dropped", []))
+            n_leak = len(result.get("leakage", []))
+            bl = result.get("baseline", {})
+            bl_cmp = (
+                self._t(
+                    f"强基线（众数类）准确率 {bl.get('accuracy', '-')}，模型须先赢过它",
+                    f"baseline (majority class) accuracy {bl.get('accuracy', '-')} — the model must beat it first",
+                )
+                if wants_classification
+                else self._t(
+                    f"强基线（均值预测）RMSE {bl.get('rmse', '-')}",
+                    f"baseline (mean predictor) RMSE {bl.get('rmse', '-')}",
+                )
+            )
+            cal = result.get("calibration", {})
+            cal_line = (
+                self._t(
+                    f"⑤ 校准：Brier={cal.get('brier', '-')}，ECE={cal.get('ece', '-')}；",
+                    f"5. calibration: Brier={cal.get('brier', '-')}, ECE={cal.get('ece', '-')}; ",
+                )
+                if cal
+                else ""
+            )
             text = self._t(
-                f"**{title}**（{result['task']}，最优模型 `{best}`）：{metric_lines}；5折CV {result['cv_mean']:.3f}±{result['cv_std']:.3f}。\n\n"
-                f"**建模前的处理**（同一套流程因果推断也在用）：① 数据预处理——{n_pre} 项清理（缺失值/NaN 填补、稀疏列与常数列剔除）；"
-                f"② 特征工程——构造 + 共线性处理（剔除 {n_col} 个冗余特征，成对 |r| 与 VIF 双重把关）。"
-                f"③ 建模之后做特征分析（SHAP/置换重要性），先有可信模型、再解释特征。",
-                f"**{title}** ({result['task']}, best model `{best}`): {metric_lines}; 5-fold CV {result['cv_mean']:.3f}±{result['cv_std']:.3f}.\n\n"
-                f"**Pre-modelling steps** (the same pipeline causal inference reuses): 1. preprocessing — {n_pre} cleanups "
-                f"(missing/NaN imputation, sparse and constant columns dropped); 2. feature engineering — construction plus "
-                f"collinearity handling ({n_col} redundant features removed via pairwise |r| and VIF). "
-                f"3. feature analysis (SHAP/permutation) runs *after* the model is validated.",
+                f"**{title}**（{result['task']}，最优模型 `{best}`）：{metric_lines}；5折CV(AUC) {result['cv_mean']:.3f}±{result['cv_std']:.3f}。\n\n"
+                f"**端到端闭环**：① 标签定义（正例率 {pd.Series(y).mean():.1%}）→ ② 预处理与特征工程"
+                f"（{n_pre} 项清理、剔除 {n_col} 个冗余特征）→ ③ 泄漏检查（发现 {n_leak} 处可疑）→ "
+                f"④ {bl_cmp} → 建模（分层5折交叉验证 + 留出检验）→ {cal_line}"
+                f"⑥ 事后特征分析（SHAP/置换），先有可信模型、再解释特征。",
+                f"**{title}** ({result['task']}, best model `{best}`): {metric_lines}; stratified 5-fold CV (AUC) "
+                f"{result['cv_mean']:.3f}±{result['cv_std']:.3f}.\n\n"
+                f"**End-to-end loop**: 1. label definition (positive rate {pd.Series(y).mean():.1%}) → "
+                f"2. preprocessing & feature engineering ({n_pre} cleanups, {n_col} redundant features pruned) → "
+                f"3. leakage screen ({n_leak} suspects) → 4. {bl_cmp} → training (stratified CV + held-out test) → "
+                f"{cal_line}6. post-model feature analysis (SHAP/permutation) — explain only after the model is validated.",
             )
 
             # Explainability chart: SHAP (if installed) or permutation importance.
             # Deliberately positioned AFTER the model: features are interpreted
             # against a validated model, never before one exists.
             method = self._t(
-                "④ 模型之后的特征分析（SHAP）" if fa["engine"] == "shap" else "④ 模型之后的特征分析（置换重要性",
-                "4. Post-model feature analysis (SHAP)" if fa["engine"] == "shap" else "4. Post-model feature analysis (permutation importance)",
+                "⑥ 模型之后的特征分析（SHAP）" if fa["engine"] == "shap" else "⑥ 模型之后的特征分析（置换重要性",
+                "6. Post-model feature analysis (SHAP)" if fa["engine"] == "shap" else "6. Post-model feature analysis (permutation importance)",
             )
             method += self._t("）", ")")
             blocks.append(
@@ -3626,6 +3841,22 @@ class DSQueryAgent(ReadoutHandlers):
                             "image": charts.roc_chart(fpr, tpr, metrics.get("roc_auc", 0.0)),
                         }
                     )
+                    # ⑤ Calibration: ranking quality (AUC) and probability
+                    # quality (Brier/ECE) are different virtues; thresholds
+                    # built on miscalibrated scores misroute every user.
+                    cal = result.get("calibration")
+                    if cal:
+                        blocks.append(
+                            self._table_block(
+                                pd.DataFrame(cal["bins"]),
+                                self._t(
+                                    f"⑤ 概率校准（Brier={cal['brier']:.3f}，ECE={cal['ece']:.3f}，"
+                                    f"{'校准良好' if cal['well_calibrated'] else '存在偏移'}）",
+                                    f"5. Probability calibration (Brier={cal['brier']:.3f}, ECE={cal['ece']:.3f}, "
+                                    f"{'well calibrated' if cal['well_calibrated'] else 'drifted'})",
+                                ),
+                            )
+                        )
                     cm = confusion_matrix(y_te, best_model.predict(X_te))
                     blocks.append(
                         {
@@ -3691,6 +3922,181 @@ class DSQueryAgent(ReadoutHandlers):
                 text=self._t(
                     f"建模没能完成：`{exc}`\n\n可以说得更具体，比如「训练一个预测用户是否转化的分类模型」。",
                     f"Modeling failed: `{exc}`\n\nTry e.g. \"train a classifier to predict conversion\".",
+                )
+            )
+
+    def _handle_monitoring(self, question: str, slots: Dict[str, Any]) -> AgentReply:
+        """Post-launch model monitoring: drift, decay, alert thresholds.
+
+        Reference population = the training snapshot (older cohorts); current
+        = the newest cohort the model now scores. Performance history comes
+        from re-scoring the validated conversion model on tenure-ordered
+        cohort slices, oldest first — the same shape a production monitor
+        would see week by week.
+        """
+        from .tools.monitoring import PSI_CRITICAL, monitor_report
+
+        blocks: List[Dict[str, Any]] = []
+        try:
+            df = self.sql.run(
+                "SELECT tenure_days, spend_30d, sessions_30d, channel, device, converted "
+                "FROM uplift_users LIMIT 8000",
+                max_rows=100000,
+            ).dataframe
+            df = df.dropna(subset=["converted"])
+            q60 = df["tenure_days"].quantile(0.6)
+            reference = df[df["tenure_days"] >= q60].drop(columns=["converted", "tenure_days"])
+            current = df[df["tenure_days"] < q60].drop(columns=["converted", "tenure_days"])
+            # tenure_days is the cohort split itself — comparing it across
+            # cohorts is tautological, so it stays out of the drift screen.
+
+            # Cohort AUC history: fit on the training snapshot, score the
+            # remaining cohorts oldest -> newest (deployment order).
+            from sklearn.linear_model import LogisticRegression
+            from sklearn.metrics import roc_auc_score
+
+            feat_cols = ["spend_30d", "sessions_30d", "tenure_days"]
+            X_all = pd.get_dummies(
+                df[feat_cols + ["channel", "device"]], columns=["channel", "device"], drop_first=True
+            )
+            tr_mask = df["tenure_days"] >= q60
+            model = LogisticRegression(max_iter=2000).fit(X_all[tr_mask], df.loc[tr_mask, "converted"])
+            ev = df[~tr_mask]
+            ev_X = X_all[~tr_mask]
+            slices = pd.qcut(ev["tenure_days"], 4, labels=False, duplicates="drop")
+            auc_history = []
+            for s in sorted(pd.unique(slices), reverse=True):  # oldest first
+                mask = (slices == s).to_numpy()
+                lo, hi = ev.loc[mask, "tenure_days"].min(), ev.loc[mask, "tenure_days"].max()
+                if mask.sum() >= 60 and ev.loc[mask, "converted"].nunique() == 2:
+                    auc_history.append(
+                        {
+                            "slice": self._t(f"入站 {int(lo)}–{int(hi)} 天", f"tenure {int(lo)}–{int(hi)}d"),
+                            "auc": float(roc_auc_score(ev.loc[mask, "converted"], model.predict_proba(ev_X[mask])[:, 1])),
+                        }
+                    )
+
+            rep = monitor_report(reference, current, auc_history)
+            drift = rep["feature_drift"]
+            ks = rep["data_drift"]
+            perf = rep["performance"]
+
+            verdict_zh = {"ok": "健康", "warn": "警告", "critical": "需重训", "insufficient_history": "历史不足"}
+            verdict_en = {"ok": "healthy", "warn": "warning", "critical": "retrain", "insufficient_history": "insufficient history"}
+            blocks.append(
+                {
+                    "type": "kpi",
+                    "items": [
+                        {
+                            "label": self._t("监控结论", "Monitoring verdict"),
+                            "value": verdict_zh.get(rep["overall"], rep["overall"]),
+                            "sub": self._t(f"{len(rep['alerts'])} 条告警", f"{len(rep['alerts'])} alert(s)"),
+                        },
+                        {
+                            "label": self._t("最大 PSI", "Max PSI"),
+                            "value": f"{drift['max_psi']:.3f}",
+                            "sub": self._t(f"阈值 {PSI_CRITICAL}", f"threshold {PSI_CRITICAL}"),
+                        },
+                        {
+                            "label": self._t("AUC 衰减", "AUC decay"),
+                            "value": f"-{perf.get('drop', 0):.3f}" if perf.get("drop") is not None else "-",
+                            "sub": f"{perf.get('baseline_auc', '-')} → {perf.get('recent_auc', '-')}",
+                        },
+                    ],
+                }
+            )
+            if drift["columns"]:
+                blocks.append(
+                    self._table_block(
+                        pd.DataFrame(
+                            [[r["feature"], f"{r['psi']:.4f}", r["severity"]] for r in drift["columns"][:8]],
+                            columns=[
+                                self._t("特征", "feature"),
+                                "PSI",
+                                self._t(f"等级（warn>{PSI_CRITICAL - 0.15:.2f}, critical>{PSI_CRITICAL}）", f"severity (warn>0.10, critical>{PSI_CRITICAL})"),
+                            ],
+                        ),
+                        self._t("特征漂移（PSI，对照训练分布）", "Feature drift (PSI vs training distribution)"),
+                    )
+                )
+                try:
+                    blocks.append(
+                        {
+                            "type": "chart",
+                            "title": self._t("PSI 排行", "PSI ranking"),
+                            "image": charts.importance_bar(
+                                [{"feature": r["feature"], "value": r["psi"]} for r in drift["columns"][:8]],
+                                title="Feature drift (PSI)",
+                            ),
+                        }
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
+            if ks["tests"]:
+                blocks.append(
+                    self._table_block(
+                        pd.DataFrame(
+                            [[r["feature"], f"{r['ks']:.4f}", f"{r['p_value']:.4f}", "DRIFT" if r["drifted"] else "ok"] for r in ks["tests"][:8]],
+                            columns=[self._t("特征", "feature"), "KS", "p", self._t("分布", "dist")],
+                        ),
+                        self._t("数据漂移（KS 双样本检验，p<0.05 视为漂移）", "Data drift (two-sample KS, p<0.05)"),
+                    )
+                )
+            if perf.get("aucs"):
+                blocks.append(
+                    self._table_block(
+                        pd.DataFrame(
+                            [[h["slice"], f"{h['auc']:.4f}"] for h in perf["aucs"]],
+                            columns=[self._t("队列", "cohort"), "AUC"],
+                        ),
+                        self._t(
+                            f"性能衰减（基线 {perf['baseline_auc']:.3f} → 近期 {perf['recent_auc']:.3f}，判级 {perf['verdict']}）",
+                            f"Performance decay (baseline {perf['baseline_auc']:.3f} → recent {perf['recent_auc']:.3f}, verdict {perf['verdict']})",
+                        ),
+                    )
+                )
+            if rep["alerts"]:
+                blocks.append(
+                    self._table_block(
+                        pd.DataFrame(
+                            [[a["level"], a["check"], a["message"]] for a in rep["alerts"]],
+                            columns=["level", "check", self._t("告警", "alert")],
+                        ),
+                        self._t("告警清单", "Alerts"),
+                    )
+                )
+            advice = {
+                "ok": self._t("各项检查通过，模型可继续服务；保持按周监控。", "All checks pass; keep monitoring weekly."),
+                "warn": self._t(
+                    "出现中等漂移：暂不重训，但收紧监控频率（按天），并排查漂移特征的口径变化。",
+                    "Moderate drift: no retrain yet, tighten monitoring to daily and audit the drifting features' calibers.",
+                ),
+                "critical": self._t(
+                    "特征漂移或性能衰减越过重训阈值：用近期数据重训并重跑校准与泄漏检查后上线，旧模型立即降级。",
+                    "Drift/decay crossed the retrain threshold: retrain on recent data, rerun calibration and leakage screens before shipping, and shadow-deploy the old model meanwhile.",
+                ),
+            }
+            text = self._t(
+                f"**模型监控**（对照训练分布，当前 = 最新入站队列）：总体 **{verdict_zh.get(rep['overall'])}**。"
+                f"特征漂移最大 PSI {drift['max_psi']:.3f}；KS 漂移特征 {ks.get('n_drifted', 0)} 个；"
+                f"AUC {perf.get('baseline_auc', '-')} → {perf.get('recent_auc', '-')}（衰减 {perf.get('drop', 0):.3f}）。"
+                f"{advice.get(rep['overall'], advice['ok'])}",
+                f"**Model monitoring** (reference = training distribution, current = newest cohort): overall "
+                f"**{verdict_en.get(rep['overall'])}**. Max feature PSI {drift['max_psi']:.3f}; {ks.get('n_drifted', 0)} KS-drifted "
+                f"features; AUC {perf.get('baseline_auc', '-')} → {perf.get('recent_auc', '-')} (drop {perf.get('drop', 0):.3f}). "
+                f"{advice.get(rep['overall'], advice['ok'])}",
+            )
+            return AgentReply(
+                text=text,
+                blocks=blocks,
+                tool_calls=[{"tool": "monitor_report", "args": {}, "result": {"overall": rep["overall"], "n_alerts": len(rep["alerts"])}}],
+                data={"monitoring": {"overall": rep["overall"], "alerts": rep["alerts"]}},
+            )
+        except Exception as exc:  # noqa: BLE001 - surfaced with a next-step hint
+            return AgentReply(
+                text=self._t(
+                    f"模型监控没能完成：`{exc}`",
+                    f"Model monitoring failed: `{exc}`",
                 )
             )
 
