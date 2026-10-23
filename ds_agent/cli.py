@@ -71,7 +71,7 @@ def ensure_data(force: bool = False) -> None:
 def cmd_chat(args: argparse.Namespace) -> None:
     ensure_data()
     agent = DSQueryAgent(warehouse=settings.warehouse)
-    print(f"{BOLD}DS Agent{RESET} {DIM}- natural language data science. Type 'help' for capabilities, 'exit' to quit.{RESET}")
+    print(f"{BOLD}DS-Agent{RESET} {DIM}- natural language data science. Type 'help' for capabilities, 'exit' to quit.{RESET}")
     try:
         while True:
             try:
@@ -109,7 +109,7 @@ def cmd_serve(args: argparse.Namespace) -> None:
         # Open the browser once the server is accepting connections; a fixed
         # short delay is enough for uvicorn's startup on a local machine.
         threading.Timer(1.2, webbrowser.open, [url]).start()
-    print(f"{BOLD}DS Agent web UI{RESET} -> {url}" + ("" if args.open_browser else f" {DIM}(browser not opened){RESET}"))
+    print(f"{BOLD}DS-Agent web UI{RESET} -> {url}" + ("" if args.open_browser else f" {DIM}(browser not opened){RESET}"))
     uvicorn.run(app, host=args.host, port=args.port, log_level="warning")
 
 

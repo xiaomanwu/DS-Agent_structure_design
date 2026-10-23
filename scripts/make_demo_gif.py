@@ -101,7 +101,7 @@ T = {
         "built": "内置演示数仓 · DuckDB",
         "llm": "内置规则模式",
         "llm_on": "LLM 已连接",
-        "intro_title": "DS Agent",
+        "intro_title": "DS-Agent",
         "intro": [
             "用自然语言提问，Agent 自己选工具、跑检验、写结论。",
             "{n} 个核心场景 · 先中文完整演示，再切换英文完整重演一遍。",
@@ -123,7 +123,7 @@ T = {
         "built": "Built-in demo warehouse · DuckDB",
         "llm": "Rules mode",
         "llm_on": "LLM connected",
-        "intro_title": "DS Agent",
+        "intro_title": "DS-Agent",
         "intro": [
             "Ask in plain language; the agent picks tools, runs tests, writes the conclusion.",
             "{n} core scenarios - a full pass in Chinese first, then a full pass in English.",
@@ -209,7 +209,7 @@ def sidebar(d, lang: str, scenes: Sequence[Dict[str, Any]], current: Optional[in
     d.line([SIDE_W, 0, SIDE_W, H], fill=LINE)
     rounded(d, [16, 16, 46, 46], 9, fill=PURPLE)
     text(d, (31, 31), "DS", 12, CARD, "mm", bold=True)
-    text(d, (54, 17), "DS Agent", 14, bold=True)
+    text(d, (54, 17), "DS-Agent", 14, bold=True)
     text(d, (54, 35), T[lang]["tagline"], 9, MUTED)
 
     text(d, (16, 68), T[lang]["caps"].upper(), 9, FAINT, bold=True)
@@ -444,7 +444,7 @@ def answer_body(d, scene: Dict[str, Any], lang: str, stage: int) -> None:
 
     y = 58 + qh + 10
     intent = scene.get("intent") or ""
-    text(d, (x0, y), "DS Agent", 9, MUTED, bold=True)
+    text(d, (x0, y), "DS-Agent", 9, MUTED, bold=True)
     if intent:
         chip_w = d.textlength(intent, font=F[8]) + 12
         rounded(d, [x0 + 46, y - 1, x0 + 46 + chip_w, y + 13], 6, fill=BRAND_SOFT)

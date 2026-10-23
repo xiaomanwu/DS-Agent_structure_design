@@ -74,7 +74,7 @@ class AgentHolder:
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="DS Agent", version="0.1.0")
+    app = FastAPI(title="DS-Agent", version="0.1.0")
     holder = AgentHolder()
 
     @app.get("/", response_class=HTMLResponse)

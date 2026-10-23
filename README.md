@@ -1,4 +1,4 @@
-# DS Agent
+# DS-Agent
 
 <div align="center">
 
@@ -48,7 +48,7 @@ python -m ds_agent.cli              # 打开网页界面（默认，自动开浏
 python -m ds_agent.cli ask "近7天 GMV 为什么跌了？"   # 单次问答
 ```
 
-![DS Agent 界面演示](docs/demo.gif)
+![DS-Agent 界面演示](docs/demo.gif)
 
 也可以当库用：
 
@@ -156,7 +156,7 @@ python -m ds_agent.cli              # web UI (default, opens the browser)
 python -m ds_agent.cli ask "Why did GMV drop in the last 7 days?"
 ```
 
-![DS Agent UI demo](docs/demo.gif)
+![DS-Agent UI demo](docs/demo.gif)
 
 As a library:
 

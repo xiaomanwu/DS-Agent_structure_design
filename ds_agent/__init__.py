@@ -1,4 +1,4 @@
-"""DS Agent: a natural-language data science agent."""
+"""DS-Agent: a natural-language data science agent."""
 
 __version__ = "0.1.0"
 

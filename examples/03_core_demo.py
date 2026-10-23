@@ -38,7 +38,7 @@ def main() -> None:
     datasources = DataSourceRegistry(Warehouse(warehouse), path=workspace / "data_sources.json")
     agent = DSQueryAgent(warehouse=warehouse, artifact_dir=Path("artifacts"), metric_dict=metric_dict, datasources=datasources)
 
-    print("DS Agent — core capability demo (deterministic mode, no LLM key needed)")
+    print("DS-Agent — core capability demo (deterministic mode, no LLM key needed)")
 
     show("1. 自然语言查询（语义层口径 + 只读 SQL）", agent.ask("近30天各渠道 GMV 排名"))
     show("2. 指标异动诊断（异常检测 + 贡献度 + 根因下钻 + 置信卡）", agent.ask("最近14天 GMV 为什么跌了？"))

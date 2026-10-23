@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DS Agent · 自然语言数据分析 / Analytics in Natural Language</title>
+<title>DS-Agent · 自然语言数据分析 / Analytics in Natural Language</title>
 <style>
   :root{
     --ink:#0b1526; --muted:#64748b; --line:#e6eaf2; --brand:#4f46e5; --brand-2:#7c3aed;
@@ -192,7 +192,7 @@
   <aside class="side">
     <div class="logo">
       <div class="mark">DS</div>
-      <div><h1>DS Agent</h1><p id="side-tagline"></p></div>
+      <div><h1>DS-Agent</h1><p id="side-tagline"></p></div>
     </div>
     <h2 id="side-caps-title"></h2>
     <div id="caps"></div>
@@ -309,7 +309,7 @@ const I18N = {
       "训练分类模型预测用户是否转化",
       "把分析写成周报"
     ],
-    greet: "我是 DS Agent。可以直接用自然语言问指标，比如 **近7天 GMV 为什么跌了？** 我会先做季节性异常检测，再拆贡献度、做多维归因；也可以让我设计/解读 AB 实验，或用 DID、合成控制做因果评估。\n\n输入 `help` 查看全部能力。"
+    greet: "我是 DS-Agent。可以直接用自然语言问指标，比如 **近7天 GMV 为什么跌了？** 我会先做季节性异常检测，再拆贡献度、做多维归因；也可以让我设计/解读 AB 实验，或用 DID、合成控制做因果评估。\n\n输入 `help` 查看全部能力。"
   },
   en: {
     tagline: "Analytics in natural language",
@@ -361,7 +361,7 @@ const I18N = {
       "Train a classifier to predict user conversion",
       "Write the analysis up as a weekly report"
     ],
-    greet: "I am DS Agent. Ask about metrics in plain language, e.g. **Why did GMV drop in the last 7 days?** I run seasonal anomaly detection, contribution decomposition and multi-dimension attribution; I can also design or read out AB experiments, or estimate causal effects with DiD and synthetic control.\n\nType `help` to see all capabilities."
+    greet: "I am DS-Agent. Ask about metrics in plain language, e.g. **Why did GMV drop in the last 7 days?** I run seasonal anomaly detection, contribution decomposition and multi-dimension attribution; I can also design or read out AB experiments, or estimate causal effects with DiD and synthetic control.\n\nType `help` to see all capabilities."
   }
 };
 
@@ -512,7 +512,7 @@ function addAgent(text, blocks, artifacts, intent) {
     const name = p.split("/").pop();
     return `<a href="/artifacts/${encodeURIComponent(name)}" target="_blank">${esc(name)}</a>`;
   }).join("");
-  el.innerHTML = `<div class="who"><span class="mark">DS</span><span>DS Agent${intent ? " · " + esc(intent) : ""}</span></div>
+  el.innerHTML = `<div class="who"><span class="mark">DS</span><span>DS-Agent${intent ? " · " + esc(intent) : ""}</span></div>
     <div class="answer">${md(text)}${renderBlocks(blocks || [])}
     ${links ? `<div class="artifacts">${links}</div>` : ""}</div>`;
   document.getElementById("messages").appendChild(el);
@@ -579,7 +579,7 @@ function greet() {
   const el = document.createElement("div");
   el.className = "msg";
   el.id = "greeting-msg";
-  el.innerHTML = `<div class="who"><span class="mark">DS</span><span>DS Agent</span></div>
+  el.innerHTML = `<div class="who"><span class="mark">DS</span><span>DS-Agent</span></div>
     <div class="answer" id="greeting-text">${md(t("greet"))}</div>`;
   document.getElementById("messages").appendChild(el);
   scroll();

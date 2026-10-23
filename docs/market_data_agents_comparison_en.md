@@ -1,4 +1,4 @@
-# Data Agent Market Research & Comparison with DS Agent
+# Data Agent Market Research & Comparison with DS-Agent
 
 > Research date: 2026-10-23 · Sources: Gartner/IDC citations, vendor docs, industry evaluations (Valiotti, Taku.ai, 4Analytics, agentmarketcap.ai, Deepnote comparisons, etc.)
 
@@ -84,11 +84,11 @@ Industry consensus (repeated across evaluations):
 
 ---
 
-## 3. Comparison with DS Agent (This Project)
+## 3. Comparison with DS-Agent (This Project)
 
 ### 3.1 Capability Matrix
 
-| Dimension | Mainstream market | DS Agent (this project) |
+| Dimension | Mainstream market | DS-Agent (this project) |
 | --- | --- | --- |
 | NL query + semantic layer | ✅ every vendor's core | ✅ metric aliases resolve to one caliber, read-only SQL, row caps, write blocking; registered metrics are warehouse-validated then live in the semantic layer |
 | Anomaly detection | mostly simple thresholds/forecast residuals | ✅ **stronger**: seasonal baseline + robust z (MAD) + CUSUM; Holt-Winters/SARIMA/STL-ETS/auto with rolling-origin backtesting (published MASE); plus autoencoder + isolation forest deep-learning cross-check |
@@ -105,22 +105,22 @@ Industry consensus (repeated across evaluations):
 | LLM dependency | most are LLM-dependent | ✅ **optional**: deterministic rule routing runs fully offline; LLM (any OpenAI-compatible endpoint) only orchestrates and narrates, with automatic fallback |
 | Reproducibility | Vanna/Wren good, Julius poor | ✅ 308 tests lock statistical behavior; seeded sampling; answers attach SQL and test tables |
 
-### 3.2 DS Agent's Advantages (vs the whole market)
+### 3.2 DS-Agent's Advantages (vs the whole market)
 
-1. **Causal inference + experiment science is a generational gap.** Almost no product ships DID/PSM/RDD/Uplift/interrupted-time-series, let alone 15 experiment archetypes (reversal, parent-child, two-sided market, switchback) and a sensitivity-analysis suite — precisely the gap industry reviews call "correlation machines". Growth teams normally hand-code this; DS Agent productizes it.
+1. **Causal inference + experiment science is a generational gap.** Almost no product ships DID/PSM/RDD/Uplift/interrupted-time-series, let alone 15 experiment archetypes (reversal, parent-child, two-sided market, switchback) and a sensitivity-analysis suite — precisely the gap industry reviews call "correlation machines". Growth teams normally hand-code this; DS-Agent productizes it.
 2. **Statistical trust engineering**: every conclusion auto-attaches test tables and consistency verdicts, confidence cards (significance / baseline quality / leave-one-out extremes / segment consistency), permutation-null cross-checks. Against Julius's "two runs, two p-values", the rules-first architecture is reproducible by construction.
 3. **Fully functional without an LLM**: most competitors stop without one; here the LLM is an enhancement, not a dependency — a fit for deterministic, on-prem, cost-sensitive deployments.
 4. **Self-explaining theory**: 30+ test cards + a method-selection decision tree + sampling theory make it a built-in statistical consultant, while competitors mostly "give a number".
 
-### 3.3 DS Agent's Gaps (honest list)
+### 3.3 DS-Agent's Gaps (honest list)
 
-1. **Data connectivity & scale**: competitors connect natively to Snowflake/BigQuery/Databricks with billion-row pushdown; DS Agent is DuckDB-centric with DuckDB/SQLite/Postgres/MySQL + file sources, no distributed pushdown.
-2. **Permissions & governance**: Unity Catalog/Snowflake-RBAC-grade row-level security, column masking and per-user access evaluation — DS Agent has no enterprise permission system yet; the biggest productionization gap.
+1. **Data connectivity & scale**: competitors connect natively to Snowflake/BigQuery/Databricks with billion-row pushdown; DS-Agent is DuckDB-centric with DuckDB/SQLite/Postgres/MySQL + file sources, no distributed pushdown.
+2. **Permissions & governance**: Unity Catalog/Snowflake-RBAC-grade row-level security, column masking and per-user access evaluation — DS-Agent has no enterprise permission system yet; the biggest productionization gap.
 3. **Semantic-layer engineering**: the caliber dictionary is light and effective, but lacks versioned modeling files (LookML/MDL-grade), explicit join declarations and dbt integration; complex multi-table NL joins trail Wren/Cortex Analyst.
 4. **Self-learning loop**: Vanna's "successful question/SQL pairs flow back into the training set" is absent; rule iteration is manual.
-5. **Execution loop**: HENGSHI/Deepnote/Hyperaide can go "analysis → alert → action/deploy"; DS Agent stops at dashboards and reports.
+5. **Execution loop**: HENGSHI/Deepnote/Hyperaide can go "analysis → alert → action/deploy"; DS-Agent stops at dashboards and reports.
 6. **Collaboration & engineering surface**: no multi-user collaboration, Git review, schedules, or MCP/API integration (Hex/Deepnote strengths).
-7. **Autonomous multi-turn planning**: Genie Agent mode / Cortex Agents "plan → reflect → retry" loops; DS Agent is primarily single-turn deterministic routing (LLM orchestration optional).
+7. **Autonomous multi-turn planning**: Genie Agent mode / Cortex Agents "plan → reflect → retry" loops; DS-Agent is primarily single-turn deterministic routing (LLM orchestration optional).
 
 ### 3.4 Highest-Value Improvements to Borrow
 
@@ -132,26 +132,26 @@ Industry consensus (repeated across evaluations):
 
 ---
 
-## 4. LLM Vendors' Agents / Skills vs DS Agent
+## 4. LLM Vendors' Agents / Skills vs DS-Agent
 
-Beyond data products, the model vendors themselves ship general-purpose agents and skills, with data analysis as a flagship scenario. The relationship to DS Agent is "general execution environment vs vertical analysis engine":
+Beyond data products, the model vendors themselves ship general-purpose agents and skills, with data analysis as a flagship scenario. The relationship to DS-Agent is "general execution environment vs vertical analysis engine":
 
-| Vendor | Agent / Skill form | Data-analysis capability | vs DS Agent |
+| Vendor | Agent / Skill form | Data-analysis capability | vs DS-Agent |
 | --- | --- | --- | --- |
 | **OpenAI** | ChatGPT agent / Workspace agents (multi-step tasks producing spreadsheets and decks), Advanced Data Analysis (Code Interpreter), Codex, Responses API (managed code interpreter + search) | The LLM writes Python on the fly in a sandbox to analyze uploaded files; strong chained analysis | Pros: generality, huge ecosystem (1M+ orgs), any-file analysis. Cons: opaque method selection, no caliber governance, results trapped in threads, not reproducible, no warehouse permission inheritance |
-| **Anthropic** | Claude Agent Skills (composable skill packages), Claude Code, Cowork, Managed Agents, Agent SDK, MCP ecosystem (5,800+ servers) | Skills can package analysis methodology into reusable, distributable skill files; strong long-document analysis; the regulated-industry favorite | Pros: the Skill mechanism is exactly the vehicle for distributing DS Agent's methodology; MCP bridges tools. Cons: bare Claude still improvises statistics — it needs a deterministic tool layer like DS Agent underneath |
+| **Anthropic** | Claude Agent Skills (composable skill packages), Claude Code, Cowork, Managed Agents, Agent SDK, MCP ecosystem (5,800+ servers) | Skills can package analysis methodology into reusable, distributable skill files; strong long-document analysis; the regulated-industry favorite | Pros: the Skill mechanism is exactly the vehicle for distributing DS-Agent's methodology; MCP bridges tools. Cons: bare Claude still improvises statistics — it needs a deterministic tool layer like DS-Agent underneath |
 | **Google** | Gemini Enterprise / Deep Research, NotebookLM, ADK, Interactions API | Deep Research for investigation; 1M+ token context for whole-corpus documents; first-party Search grounding | Pros: research tasks, multimodal, Workspace collaboration. Cons: aimed at research/office, not warehouses; SQL/calibers/experiment methodology out of scope |
 | **Microsoft** | Microsoft 365 Copilot (built-in Researcher / Analyst agents), Copilot Studio, Fabric Data Agent | Analyst agent targets Excel/Power BI workflows; Fabric data agent writes read-only SQL/DAX/KQL | Pros: unbeatable office ecosystem, Purview governance. Cons: Fabric/365-bound; statistical depth matches the platform-native camp |
-| **Alibaba (Qwen)** | Agent Studio (full-stack enterprise agent platform: automatic model routing, long-term memory, hosted running, self-evolution engine), Qwen Cloud Skills/CLI-ified model services, One Key MCP (one key → 100+ services) | Strong platform layer (compute scheduling, model routing, memory) but analysis methodology must come from upper layers | Pros: China compliance/on-prem, model-neutral (one subscription covers Qwen/Kimi/GLM/DeepSeek), 50+ atomic APIs — good infrastructure. Cons: a general agent platform without a statistics layer — DS Agent can sit on top as the vertical capability |
-| **DeepSeek** | Expert mode (tiered modes), agent capabilities strengthening | Model-centric; no mature agent product system yet | Cheap and strong at reasoning — a good optional LLM backend for DS Agent rather than a competitor |
+| **Alibaba (Qwen)** | Agent Studio (full-stack enterprise agent platform: automatic model routing, long-term memory, hosted running, self-evolution engine), Qwen Cloud Skills/CLI-ified model services, One Key MCP (one key → 100+ services) | Strong platform layer (compute scheduling, model routing, memory) but analysis methodology must come from upper layers | Pros: China compliance/on-prem, model-neutral (one subscription covers Qwen/Kimi/GLM/DeepSeek), 50+ atomic APIs — good infrastructure. Cons: a general agent platform without a statistics layer — DS-Agent can sit on top as the vertical capability |
+| **DeepSeek** | Expert mode (tiered modes), agent capabilities strengthening | Model-centric; no mature agent product system yet | Cheap and strong at reasoning — a good optional LLM backend for DS-Agent rather than a competitor |
 
-**Core difference**: vendor general agents do data analysis by "having the LLM write code on the spot" — flexible but method-opaque, non-reproducible, caliber-free. DS Agent ships "deterministic, test-verified analysis tools (308 tests) + a single-caliber semantic layer" with the LLM only orchestrating and narrating. The two are highly complementary: DS Agent's capability modules can be packaged as Claude Skills / GPTs / MCP tools and distributed through vendor ecosystems, while vendor agents can serve as DS Agent's front end and session layer.
+**Core difference**: vendor general agents do data analysis by "having the LLM write code on the spot" — flexible but method-opaque, non-reproducible, caliber-free. DS-Agent ships "deterministic, test-verified analysis tools (308 tests) + a single-caliber semantic layer" with the LLM only orchestrating and narrating. The two are highly complementary: DS-Agent's capability modules can be packaged as Claude Skills / GPTs / MCP tools and distributed through vendor ecosystems, while vendor agents can serve as DS-Agent's front end and session layer.
 
 ---
 
 ## 5. Conclusion
 
-The mainstream data-agent market competes on **"accurate querying + trustworthy governance"** (semantic layers, permissions, auditability), while **analysis methodology — experiments, causal inference, sampling, statistical testing — is an industry-wide gap**. DS Agent occupies exactly that gap: it leads the market on causal inference, experiment science and statistical transparency, with a unique LLM-optional deterministic architecture; its gaps are data-platform engineering (connectors, scale pushdown, permission governance, collaboration, integration). The two are complementary, not head-to-head — with the §3.4 guardrails and self-learning in place, DS Agent can plug into any warehouse ecosystem as the "methodology layer" rather than fight Genie/Cortex head-on.
+The mainstream data-agent market competes on **"accurate querying + trustworthy governance"** (semantic layers, permissions, auditability), while **analysis methodology — experiments, causal inference, sampling, statistical testing — is an industry-wide gap**. DS-Agent occupies exactly that gap: it leads the market on causal inference, experiment science and statistical transparency, with a unique LLM-optional deterministic architecture; its gaps are data-platform engineering (connectors, scale pushdown, permission governance, collaboration, integration). The two are complementary, not head-to-head — with the §3.4 guardrails and self-learning in place, DS-Agent can plug into any warehouse ecosystem as the "methodology layer" rather than fight Genie/Cortex head-on.
 
 ---
 
