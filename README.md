@@ -11,11 +11,11 @@
 > 🎨 **Vibe Coding 作品 / Built by Vibe Coding**
 >
 > 本项目由人类提出需求、场景与验收标准，AI 全程编码实现——从统计引擎、因果推断工具到 Web
-> 界面与演示动图，均为人机对话式协作的产物。**318 个自动化测试**是这套协作方式的质量证明。
+> 界面与演示动图，均为人机对话式协作的产物。**318 个自动化测试**是这套协作方式的可以跑通的证明。
 >
 > This project was built vibe-coding style: a human steering with requirements and acceptance
 > criteria, an AI writing all the code — stats engines, causal tools, web UI and demo GIF alike.
-> The **318 automated tests** are the quality receipt of that collaboration.
+> The **318 automated tests** are the proof receipt of that collaboration could work.
 
 所有数字都来自确定性、经过测试的统计代码，不靠大模型"编"；没有 LLM 也能完整跑通。
 Every number comes from deterministic, tested code — the LLM is optional.
